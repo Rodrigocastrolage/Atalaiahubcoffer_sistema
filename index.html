@@ -240,8 +240,8 @@ tr:hover td{background:#fdf8f4}
 .btn-backup.importar:hover{background:var(--cafe)}
 
 /* MODAL */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,15,10,.55);z-index:200;overflow-y:auto}
-.modal-bg.aberto{display:flex;align-items:center;justify-content:center;padding:20px;min-height:100vh;width:100%}
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,15,10,.55);z-index:9999}
+.modal-bg.aberto{display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .modal{background:white;border-radius:17px;padding:26px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:popIn .2s}
 @keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 .modal h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--cafe);margin-bottom:16px}
