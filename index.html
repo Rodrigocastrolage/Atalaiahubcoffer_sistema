@@ -631,6 +631,13 @@ tr:hover td{background:#fdf8f4}
     <p style="font-size:.82rem;color:var(--cinza);margin-bottom:14px">Configure CNPJ, endereço e telefone que aparecem no recibo impresso.</p>
     <button class="btn-backup exportar" onclick="abrirDadosRecibo()">Editar Dados do Recibo</button>
   </div>
+  <div class="backup-card" style="margin-top:18px;border-left:4px solid var(--espresso)">
+    <h3>Administradores do Sistema</h3>
+    <p style="font-size:.82rem;color:var(--cinza);margin-bottom:14px">Emails com acesso total (admin). Separe por vírgula. O login detecta automaticamente o perfil.</p>
+    <textarea id="admin-emails-input" rows="3" placeholder="ex: rodrigocastrolage@gmail.com, outro@email.com"
+      style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;resize:vertical;margin-bottom:10px"></textarea>
+    <button onclick="salvarAdminEmails()" class="btn-backup exportar">Salvar Administradores</button>
+  </div>
   <div class="backup-card" style="margin-top:18px;border-left:4px solid var(--vermelho)">
     <h3 style="color:var(--vermelho)">Limpar Todos os Dados</h3>
     <p style="font-size:.82rem;color:var(--cinza);margin-bottom:14px">Remove todas as vendas, despesas, sangrias e fecha o caixa. Produtos e funcionarios sao mantidos. Use para limpar dados de teste.</p>
@@ -1042,10 +1049,19 @@ async function fazerLogin(){
     // Guardar token para requisições autenticadas
     HEADERS['Authorization'] = 'Bearer ' + data.access_token;
     iniciarRefreshToken(data.refresh_token);
+    // Determinar role: prioridade user_metadata → lista de admins no banco → fallback 'caixa'
+    let roleDetectado = data.user.user_metadata?.role || null;
+    if(!roleDetectado){
+      try {
+        const adminsCfg = await dbGetConfig('admin_emails');
+        const adminEmails = adminsCfg ? adminsCfg.split(',').map(e => e.trim().toLowerCase()) : [];
+        roleDetectado = adminEmails.includes(data.user.email.toLowerCase()) ? 'admin' : 'caixa';
+      } catch(e){ roleDetectado = 'caixa'; }
+    }
     usuarioLogado = {
       email: data.user.email,
       nome: data.user.user_metadata?.nome || data.user.email.split('@')[0],
-      role: data.user.user_metadata?.role || 'caixa'
+      role: roleDetectado
     };
     document.getElementById('tela-login').style.display = 'none';
     document.getElementById('topbar-usuario').textContent = usuarioLogado.nome;
@@ -2236,8 +2252,25 @@ async function exportarDados(){
   toast('Backup exportado com sucesso!');
 }
 
+async function salvarAdminEmails(){
+  const emails = document.getElementById('admin-emails-input').value.trim();
+  if(!emails){ toast('Informe ao menos um email.'); return; }
+  mostrarLoading('Salvando administradores...');
+  await dbSetConfig('admin_emails', emails);
+  esconderLoading();
+  toast('Administradores salvos! Refaça o login para aplicar.');
+}
+
+async function carregarAdminEmails(){
+  try {
+    const val = await dbGetConfig('admin_emails');
+    if(val) document.getElementById('admin-emails-input').value = val;
+  } catch(e){}
+}
+
 async function renderBackupInfo(){
   await carregarDados();
+  await carregarAdminEmails();
   const el=document.getElementById('backup-info');
   el.innerHTML=`
     Banco de dados: <strong style="color:var(--verde)">Supabase (online)</strong><br>
