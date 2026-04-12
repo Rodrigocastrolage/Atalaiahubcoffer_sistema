@@ -232,9 +232,9 @@ tr:hover td{background:#fdf8f4}
 .btn-backup.importar:hover{background:var(--cafe)}
 
 /* MODAL */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,15,10,.55);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
-.modal-bg.aberto{display:flex}
-.modal{background:white;border-radius:17px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:popIn .2s;margin:auto;flex-shrink:0}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,15,10,.55);z-index:200;overflow-y:auto}
+.modal-bg.aberto{display:grid;place-items:center;padding:20px}
+.modal{background:white;border-radius:17px;padding:26px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:popIn .2s}
 @keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 .modal h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--cafe);margin-bottom:16px}
 .form-group{margin-bottom:11px}
@@ -357,8 +357,8 @@ tr:hover td{background:#fdf8f4}
     <button class="nav-btn" onclick="ir('caixa',this)">Caixa</button>
     <button class="nav-btn" onclick="ir('despesas',this)">Despesas</button>
     <button class="nav-btn" onclick="ir('estoque',this)">Estoque</button>
-    <button class="nav-btn" onclick="ir('funcionarios',this)">Funcionarios</button>
-    <button class="nav-btn" onclick="ir('relatorios',this)">Relatorios</button>
+    <button class="nav-btn" onclick="ir('funcionarios',this)">Funcionários</button>
+    <button class="nav-btn" onclick="ir('relatorios',this)">Relatórios</button>
     <button class="nav-btn" onclick="ir('backup',this)">Backup</button>
   </nav>
   <div class="topbar-right">
@@ -376,8 +376,8 @@ tr:hover td{background:#fdf8f4}
   <div class="resumo-grid">
     <div class="resumo-card"><label>Vendas Hoje</label><div class="valor" id="r-vendas-hoje">R$ 0,00</div><div class="sub" id="r-qtd-hoje">0 pedidos</div></div>
     <div class="resumo-card verde"><label>Itens Vendidos</label><div class="valor" id="r-itens-hoje">0</div><div class="sub">unidades hoje</div></div>
-    <div class="resumo-card amarelo"><label>Ticket Medio</label><div class="valor" id="r-ticket">R$ 0,00</div><div class="sub">por pedido</div></div>
-    <div class="resumo-card vermelho"><label>Estoque Critico</label><div class="valor" id="r-critico">0</div><div class="sub">itens em falta</div></div>
+    <div class="resumo-card amarelo"><label>Ticket Médio</label><div class="valor" id="r-ticket">R$ 0,00</div><div class="sub">por pedido</div></div>
+    <div class="resumo-card vermelho"><label>Estoque Crítico</label><div class="valor" id="r-critico">0</div><div class="sub">itens em falta</div></div>
   </div>
   <div class="pdv-grid">
     <div><div class="produtos-grid" id="grade-produtos"></div></div>
@@ -399,7 +399,7 @@ tr:hover td{background:#fdf8f4}
         <div class="pgto-label">Forma de Pagamento</div>
         <div class="pgto-btns">
           <button class="pgto-btn ativo" onclick="selecionarPgto('dinheiro',this)">Dinheiro</button>
-          <button class="pgto-btn" onclick="selecionarPgto('cartao',this)">Cartao</button>
+          <button class="pgto-btn" onclick="selecionarPgto('cartao',this)">Cartão</button>
           <button class="pgto-btn" onclick="selecionarPgto('pix',this)">Pix</button>
         </div>
         <div class="troco-area visivel" id="troco-area">
@@ -425,13 +425,13 @@ tr:hover td{background:#fdf8f4}
   <div class="meta-box">
     <h3>Meta de Vendas</h3>
     <div class="meta-row">
-      <label>Meta Diaria</label>
+      <label>Meta Diária</label>
       <input type="number" id="meta-diaria" placeholder="R$ 0,00" oninput="salvarMeta();renderMeta()">
       <label style="margin-left:16px">Meta Mensal</label>
       <input type="number" id="meta-mensal" placeholder="R$ 0,00" oninput="salvarMeta();renderMeta()">
     </div>
     <div class="meta-progresso">
-      <div class="meta-progresso-label"><span>Progresso Diario</span><span id="meta-diaria-pct">0%</span></div>
+      <div class="meta-progresso-label"><span>Progresso Diário</span><span id="meta-diaria-pct">0%</span></div>
       <div class="meta-track"><div class="meta-fill" id="meta-diaria-bar" style="width:0%"></div></div>
     </div>
     <div class="meta-progresso" style="margin-top:8px">
@@ -494,7 +494,7 @@ tr:hover td{background:#fdf8f4}
   </div>
   <div class="tabela-wrapper">
   <table>
-    <thead><tr><th>Produto</th><th>Categoria</th><th>Preco</th><th>Estoque</th><th>Alerta</th><th>Status</th><th>Acoes</th></tr></thead>
+    <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Alerta</th><th>Status</th><th>Ações</th></tr></thead>
     <tbody id="tabela-estoque"></tbody>
   </table>
   </div>
@@ -503,13 +503,13 @@ tr:hover td{background:#fdf8f4}
 <!-- FUNCIONÁRIOS -->
 <div class="tela" id="tela-funcionarios">
   <div class="estoque-header">
-    <div class="sec-header" style="margin:0"><h2>Funcionarios</h2><p>Controle de equipe e ponto</p></div>
-    <button class="btn-add" onclick="abrirModalFunc()">+ Novo Funcionario</button>
+    <div class="sec-header" style="margin:0"><h2>Funcionários</h2><p>Controle de equipe e ponto</p></div>
+    <button class="btn-add" onclick="abrirModalFunc()">+ Novo Funcionário</button>
   </div>
-  <div class="func-grid" id="func-grid"><p style="color:var(--cinza);font-size:.85rem;padding:20px">Nenhum funcionario cadastrado.</p></div>
+  <div class="func-grid" id="func-grid"><p style="color:var(--cinza);font-size:.85rem;padding:20px">Nenhum funcionário cadastrado.</p></div>
   <div id="historico-ponto-area" style="margin-top:22px;display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-      <h3 style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--cafe)" id="historico-ponto-titulo">Historico de Ponto</h3>
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--cafe)" id="historico-ponto-titulo">Histórico de Ponto</h3>
       <button onclick="fecharHistoricoPonto()" style="background:none;border:1.5px solid #ddd;border-radius:8px;padding:5px 14px;cursor:pointer;font-size:.8rem;color:var(--cinza)">Fechar</button>
     </div>
     <div id="historico-ponto-lista"></div>
@@ -518,7 +518,7 @@ tr:hover td{background:#fdf8f4}
 
 <!-- RELATÓRIOS -->
 <div class="tela" id="tela-relatorios">
-  <div class="sec-header"><h2>Relatorios de Vendas</h2><p>Visao geral do desempenho</p></div>
+  <div class="sec-header"><h2>Relatórios de Vendas</h2><p>Visao geral do desempenho</p></div>
   <div class="filtro-row">
     <button class="filtro-btn ativo" onclick="filtrarRel('hoje',this)">Hoje</button>
     <button class="filtro-btn" onclick="filtrarRel('semana',this)">Esta Semana</button>
@@ -528,7 +528,7 @@ tr:hover td{background:#fdf8f4}
   <div class="resumo-grid" style="margin-bottom:18px">
     <div class="resumo-card"><label>Faturamento</label><div class="valor" id="rel-fat">R$ 0,00</div></div>
     <div class="resumo-card verde"><label>Pedidos</label><div class="valor" id="rel-ped">0</div></div>
-    <div class="resumo-card amarelo"><label>Ticket Medio</label><div class="valor" id="rel-tick">R$ 0,00</div></div>
+    <div class="resumo-card amarelo"><label>Ticket Médio</label><div class="valor" id="rel-tick">R$ 0,00</div></div>
     <div class="resumo-card vermelho"><label>Itens Vendidos</label><div class="valor" id="rel-itens">0</div></div>
   </div>
 
@@ -570,20 +570,25 @@ tr:hover td{background:#fdf8f4}
   <div class="backup-grid">
     <div class="backup-card">
       <h3>Exportar Dados</h3>
-      <p>Salve todos os dados em um arquivo no seu computador. Faca isso regularmente para nao perder informacoes.</p>
+      <p>Salve todos os dados em um arquivo no seu computador. Faça isso regularmente para não perder informações.</p>
       <button class="btn-backup exportar" onclick="exportarDados()">Exportar Backup</button>
     </div>
     <div class="backup-card">
       <h3>Importar Dados</h3>
-      <p>Restaure dados de um arquivo de backup exportado anteriormente. Isso substituira os dados atuais.</p>
+      <p>Restaure dados de um arquivo de backup exportado anteriormente. Isso substituirá os dados atuais.</p>
       <button class="btn-backup importar" onclick="document.getElementById('input-importar').click()">Importar Backup</button>
       <input type="file" id="input-importar" accept=".json" style="display:none" onchange="importarDados(event)">
     </div>
   </div>
   <div class="backup-card" style="margin-top:18px">
     <h3>Dados do Recibo</h3>
-    <p style="font-size:.82rem;color:var(--cinza);margin-bottom:14px">Configure CNPJ, endereco e telefone que aparecem no recibo impresso.</p>
+    <p style="font-size:.82rem;color:var(--cinza);margin-bottom:14px">Configure CNPJ, endereço e telefone que aparecem no recibo impresso.</p>
     <button class="btn-backup exportar" onclick="abrirDadosRecibo()">Editar Dados do Recibo</button>
+  </div>
+  <div class="backup-card" style="margin-top:18px;border-left:4px solid var(--vermelho)">
+    <h3 style="color:var(--vermelho)">Limpar Todos os Dados</h3>
+    <p style="font-size:.82rem;color:var(--cinza);margin-bottom:14px">Remove todas as vendas, despesas, sangrias e fecha o caixa. Produtos e funcionarios sao mantidos. Use para limpar dados de teste.</p>
+    <button onclick="limparDadosTeste()" style="background:var(--vermelho);color:white;width:100%;padding:11px;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;font-size:.88rem">Limpar Dados de Teste</button>
   </div>
 </div>
 
@@ -595,7 +600,7 @@ tr:hover td{background:#fdf8f4}
     <div class="form-group"><label>Categoria</label>
       <select id="f-cat"><option>Bebidas Quentes</option><option>Bebidas Frias</option><option>Salgados</option><option>Doces</option><option>Outros</option></select>
     </div>
-    <div class="form-group"><label>Preco (R$)</label><input id="f-preco" type="number" step="0.01" placeholder="0,00"></div>
+    <div class="form-group"><label>Preço (R$)</label><input id="f-preco" type="number" step="0.01" placeholder="0,00"></div>
     <div class="form-group"><label>Estoque</label><input id="f-estoque" type="number" placeholder="0"></div>
     <div class="form-group"><label>Alerta quando chegar em (un.)</label><input id="f-alerta" type="number" placeholder="5" value="5"></div>
     <div class="modal-btns">
@@ -608,7 +613,7 @@ tr:hover td{background:#fdf8f4}
 <div class="modal-bg" id="modal-desp-bg">
   <div class="modal">
     <h3 id="modal-desp-titulo">Nova Despesa</h3>
-    <div class="form-group"><label>Descricao</label><input id="d-nome" placeholder="Ex: Aluguel, Energia..."></div>
+    <div class="form-group"><label>Descrição</label><input id="d-nome" placeholder="Ex: Aluguel, Energia..."></div>
     <div class="form-group"><label>Categoria</label>
       <select id="d-cat"><option>Aluguel</option><option>Energia</option><option>Agua</option><option>Ingredientes</option><option>Funcionarios</option><option>Manutencao</option><option>Outros</option></select>
     </div>
@@ -647,7 +652,7 @@ tr:hover td{background:#fdf8f4}
 
 <div class="modal-bg" id="modal-func-bg">
   <div class="modal">
-    <h3 id="modal-func-titulo">Novo Funcionario</h3>
+    <h3 id="modal-func-titulo">Novo Funcionário</h3>
     <div class="form-group"><label>Nome</label><input id="func-nome" placeholder="Nome completo"></div>
     <div class="form-group"><label>Cargo</label>
       <select id="func-cargo"><option>Atendente</option><option>Caixa</option><option>Barista</option><option>Cozinheiro</option><option>Gerente</option><option>Outros</option></select>
@@ -656,6 +661,22 @@ tr:hover td{background:#fdf8f4}
     <div class="modal-btns">
       <button class="btn-cancelar" onclick="fecharModal('modal-func-bg')">Cancelar</button>
       <button class="btn-salvar" onclick="salvarFuncionario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUCESSO VENDA -->
+<div class="modal-bg" id="modal-sucesso-bg">
+  <div class="modal" style="text-align:center">
+    <div style="width:56px;height:56px;background:var(--verde);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:white;font-size:1.6rem;font-weight:700">✓</div>
+    <h3 style="color:var(--verde);margin-bottom:8px">Venda Finalizada!</h3>
+    <div id="sucesso-total" style="font-size:1.5rem;font-weight:700;color:var(--espresso);margin-bottom:4px"></div>
+    <div id="sucesso-pgto" style="font-size:.84rem;color:var(--cinza);margin-bottom:6px"></div>
+    <div id="sucesso-troco" style="font-size:1rem;font-weight:700;color:var(--verde);margin-bottom:20px;min-height:24px"></div>
+    <p style="font-size:.88rem;color:var(--cinza);margin-bottom:18px">Deseja imprimir o recibo?</p>
+    <div style="display:flex;gap:10px">
+      <button onclick="fecharModal('modal-sucesso-bg')" style="flex:1;padding:13px;font-size:.95rem;border:1.5px solid #ddd;border-radius:10px;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--cinza)">Nao</button>
+      <button onclick="imprimirDoSucesso()" style="flex:1;padding:13px;font-size:.95rem;background:var(--verde);color:white;border:none;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">Imprimir</button>
     </div>
   </div>
 </div>
@@ -692,12 +713,29 @@ tr:hover td{background:#fdf8f4}
     <h3>Dados do Recibo</h3>
     <div class="form-group"><label>Nome da Empresa</label><input id="rb-nome" placeholder="Atalaia Hub Coffee"></div>
     <div class="form-group"><label>CNPJ / CPF</label><input id="rb-cnpj" placeholder="00.000.000/0000-00"></div>
-    <div class="form-group"><label>Endereco</label><input id="rb-end" placeholder="Rua, numero - Bairro"></div>
+    <div class="form-group"><label>Endereço</label><input id="rb-end" placeholder="Rua, número - Bairro"></div>
     <div class="form-group"><label>Cidade / UF</label><input id="rb-cidade" placeholder="Santa Cruz do Capibaribe - PE"></div>
     <div class="form-group"><label>Telefone</label><input id="rb-tel" placeholder="(81) 99999-9999"></div>
     <div class="modal-btns">
       <button class="btn-cancelar" onclick="fecharModal('modal-dados-bg')">Cancelar</button>
       <button class="btn-salvar" onclick="salvarDadosRecibo()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMACAO DESTRUTIVA -->
+<div class="modal-bg" id="modal-confirma-bg">
+  <div class="modal" style="text-align:center">
+    <div style="width:48px;height:48px;background:var(--vermelho);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:white;font-size:1.4rem;font-weight:700">!</div>
+    <h3 style="color:var(--vermelho);margin-bottom:8px" id="modal-confirma-titulo">Ação irreversível</h3>
+    <p style="font-size:.85rem;color:var(--cinza);margin-bottom:16px" id="modal-confirma-desc"></p>
+    <p style="font-size:.83rem;color:var(--espresso);margin-bottom:8px">Digite <strong>CONFIRMAR</strong> para continuar:</p>
+    <input id="modal-confirma-input" type="text" placeholder="CONFIRMAR"
+      style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:.95rem;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:6px">
+    <div id="modal-confirma-erro" style="color:var(--vermelho);font-size:.79rem;margin-bottom:10px;display:none">Digite exatamente CONFIRMAR</div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button onclick="fecharModal('modal-confirma-bg')" style="flex:1;padding:11px;border:1.5px solid #ddd;border-radius:9px;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--cinza)">Cancelar</button>
+      <button id="modal-confirma-btn" style="flex:1;padding:11px;background:var(--vermelho);color:white;border:none;border-radius:9px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700">Confirmar</button>
     </div>
   </div>
 </div>
@@ -710,7 +748,81 @@ tr:hover td{background:#fdf8f4}
   <div style="width:42px;height:42px;border:4px solid rgba(200,121,65,.3);border-top-color:var(--caramelo);border-radius:50%;animation:spin .8s linear infinite"></div>
   <div id="loading-msg" style="color:white;font-size:.9rem;font-weight:500;font-family:'DM Sans',sans-serif">Carregando...</div>
 </div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<style>@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVIDADE MOBILE
+═══════════════════════════════════════════════════ */
+@media(max-width:768px){
+  .topbar{height:auto;padding:10px 14px;flex-wrap:wrap;gap:8px}
+  .topbar-nav{order:2;width:100%;overflow-x:auto;padding-bottom:4px;gap:2px;flex-wrap:nowrap}
+  .topbar-nav::-webkit-scrollbar{height:3px}
+  .topbar-nav::-webkit-scrollbar-thumb{background:rgba(200,121,65,.4);border-radius:2px}
+  .nav-btn{white-space:nowrap;font-size:.75rem;padding:5px 10px}
+  .topbar-right{order:1;margin-left:auto}
+  .topbar-logo{font-size:1.05rem}
+
+  .tela{padding:14px 12px}
+
+  /* PDV: produtos em cima, carrinho embaixo */
+  .pdv-grid{grid-template-columns:1fr;gap:14px}
+  .carrinho-box{position:static;max-height:none}
+  .produtos-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+
+  /* Caixa: cards empilhados */
+  .caixa-grid{grid-template-columns:1fr}
+  .caixa-status{flex-direction:column;align-items:flex-start;gap:10px}
+
+  /* Meta row: empilhar labels e inputs */
+  .meta-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .meta-row label{margin-left:0 !important}
+  .meta-row input{width:100%}
+
+  /* Resumo cards menores */
+  .resumo-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Relatórios: empilhar */
+  .rel-grid{grid-template-columns:1fr}
+
+  /* Backup: empilhar */
+  .backup-grid{grid-template-columns:1fr}
+
+  /* Funcionários: cards menores */
+  .func-grid{grid-template-columns:1fr}
+
+  /* Modais: mais largos no mobile */
+  .modal{width:95vw;padding:20px 16px}
+
+  /* Tabela estoque: scroll horizontal */
+  .tabela-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:520px}
+
+  /* Desconto row */
+  .desconto-row{flex-wrap:wrap}
+  .desconto-row input{min-width:100px}
+
+  /* Pagamento botões */
+  .pgto-btns{grid-template-columns:repeat(3,1fr)}
+
+  /* Botoes caixa */
+  .caixa-btns{flex-wrap:wrap}
+  .btn-caixa{flex:1;min-width:100px;text-align:center}
+
+  /* Seção header */
+  .sec-header h2{font-size:1.2rem}
+
+  /* Desp/estoque headers */
+  .desp-header,.estoque-header{flex-wrap:wrap;gap:10px}
+}
+
+@media(max-width:480px){
+  .resumo-grid{grid-template-columns:1fr 1fr}
+  .produtos-grid{grid-template-columns:repeat(auto-fill,minmax(95px,1fr))}
+  .topbar-logo{display:none}
+  .pgto-btns{gap:4px}
+  .nav-btn{font-size:.72rem;padding:4px 8px}
+}
+</style>
 
 <script>
 // ═══════════════════════════════════════════════════
@@ -796,6 +908,7 @@ async function fazerLogin(){
     }
     // Guardar token para requisições autenticadas
     HEADERS['Authorization'] = 'Bearer ' + data.access_token;
+    iniciarRefreshToken(data.refresh_token);
     usuarioLogado = {
       email: data.user.email,
       nome: data.user.user_metadata?.nome || data.user.email.split('@')[0],
@@ -805,12 +918,43 @@ async function fazerLogin(){
     document.getElementById('topbar-usuario').textContent = usuarioLogado.nome;
     document.getElementById('cx-operador').value = usuarioLogado.nome;
     document.querySelector('.btn-login').textContent = 'Entrar';
+    aplicarPermissoes();
     iniciarSistema();
   } catch(e) {
-    erroEl.textContent = 'Erro de conexao. Tente novamente.';
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
     erroEl.style.display = 'block';
     document.querySelector('.btn-login').textContent = 'Entrar';
   }
+}
+
+// ═══════════════════════════════════════════════════
+// SEGURANÇA — REFRESH DE TOKEN
+// ═══════════════════════════════════════════════════
+let _refreshToken = null;
+let _refreshInterval = null;
+
+function iniciarRefreshToken(refreshToken){
+  _refreshToken = refreshToken;
+  if(_refreshInterval) clearInterval(_refreshInterval);
+  _refreshInterval = setInterval(async ()=>{
+    if(!_refreshToken) return;
+    try {
+      const r = await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: _refreshToken })
+      });
+      if(!r.ok){ console.warn('Sessão expirada — realize login novamente.'); pararRefreshToken(); return; }
+      const data = await r.json();
+      HEADERS['Authorization'] = 'Bearer ' + data.access_token;
+      _refreshToken = data.refresh_token || _refreshToken;
+    } catch(e){ console.warn('Erro ao renovar token:', e.message); }
+  }, 50 * 60 * 1000);
+}
+
+function pararRefreshToken(){
+  if(_refreshInterval){ clearInterval(_refreshInterval); _refreshInterval = null; }
+  _refreshToken = null;
 }
 
 async function sair(){
@@ -822,6 +966,7 @@ async function sair(){
   }).catch(()=>{});
   // Restaurar header padrao (anon)
   HEADERS['Authorization'] = 'Bearer ' + SUPA_KEY;
+  pararRefreshToken();
   usuarioLogado = null;
   document.getElementById('tela-login').style.display = 'flex';
   document.getElementById('login-usuario').value = '';
@@ -830,6 +975,19 @@ async function sair(){
 }
 
 document.getElementById('login-senha').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});
+
+// ═══════════════════════════════════════════════════
+// SEGURANÇA — SANITIZAÇÃO XSS
+// ═══════════════════════════════════════════════════
+function esc(str){
+  if(str==null) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 
 // ═══════════════════════════════════════════════════
 // DADOS EM MEMÓRIA
@@ -890,6 +1048,28 @@ async function iniciarSistema(){
     const h=new Date();
     document.getElementById('hora').textContent=h.getHours().toString().padStart(2,'0')+':'+h.getMinutes().toString().padStart(2,'0');
   },1000);
+}
+
+// ═══════════════════════════════════════════════════
+// SEGURANÇA — CONTROLE DE ACESSO POR PERFIL
+// ═══════════════════════════════════════════════════
+function isAdmin(){ return usuarioLogado && usuarioLogado.role === 'admin'; }
+
+function aplicarPermissoes(){
+  const admin = isAdmin();
+  ['funcionarios','backup'].forEach(tela => {
+    const btn = document.querySelector(`.nav-btn[onclick*="'${tela}'"]`);
+    if(btn) btn.style.display = admin ? '' : 'none';
+  });
+  const btnNovoProd = document.querySelector('.btn-add[onclick*="abrirModalProd"]');
+  const btnNovaDesp = document.querySelector('.btn-add[onclick*="abrirModalDesp"]');
+  if(btnNovoProd) btnNovoProd.style.display = admin ? '' : 'none';
+  if(btnNovaDesp) btnNovaDesp.style.display = admin ? '' : 'none';
+}
+
+function exigirAdmin(acao){
+  if(!isAdmin()){ toast('Acesso restrito — apenas administradores podem ' + acao + '.'); return false; }
+  return true;
 }
 
 // ═══════════════════════════════════════════════════
@@ -972,7 +1152,7 @@ function renderProdutos(){
     let badge='';
     if(semEst) badge='<div class="prod-alerta-badge critico"></div>';
     else if(baixo) badge='<div class="prod-alerta-badge"></div>';
-    d.innerHTML=badge+`<div class="nome">${p.nome}</div><div class="preco">R$ ${p.preco.toFixed(2).replace('.',',')}</div><div class="est">${p.estoque>0?p.estoque+' un.':'Sem estoque'}</div>`;
+    d.innerHTML=badge+`<div class="nome">${esc(p.nome)}</div><div class="preco">R$ ${p.preco.toFixed(2).replace('.',',')}</div><div class="est">${p.estoque>0?p.estoque+' un.':'Sem estoque'}</div>`;
     d.onclick=()=>adicionarAoCarrinho(p.id);
     g.appendChild(d);
   });
@@ -1004,7 +1184,7 @@ function renderCarrinho(){
   carrinho.forEach(item=>{
     subtotal+=item.preco*item.qtd;
     const d=document.createElement('div');d.className='cart-item';
-    d.innerHTML=`<span class="cart-item-nome">${item.nome}</span>
+    d.innerHTML=`<span class="cart-item-nome">${esc(item.nome)}</span>
       <div class="cart-item-qtd">
         <button class="qtd-btn" onclick="mudarQtd(${item.id},-1)">-</button>
         <span>${item.qtd}</span>
@@ -1105,7 +1285,17 @@ async function finalizarVenda(){
     ultimaVenda = {...venda, itens};
     vendas.push(ultimaVenda);
     document.getElementById('btn-nota').disabled=false;
-    toast('Venda de R$ '+total.toFixed(2).replace('.',',')+' finalizada! ('+formaPgto+')');
+
+    // Mostrar modal de sucesso com opção de imprimir
+    document.getElementById('sucesso-total').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+    document.getElementById('sucesso-pgto').textContent = 'Pagamento: ' + formaPgto.charAt(0).toUpperCase() + formaPgto.slice(1);
+    const trocoEl = document.getElementById('sucesso-troco');
+    if(formaPgto === 'dinheiro'){
+      const rec = parseFloat(document.getElementById('valor-recebido').value) || 0;
+      if(rec > total) trocoEl.textContent = 'Troco: R$ ' + (rec - total).toFixed(2).replace('.',',');
+      else trocoEl.textContent = '';
+    } else { trocoEl.textContent = ''; }
+    document.getElementById('modal-sucesso-bg').classList.add('aberto');
   } else {
     toast('Erro ao salvar venda!'); return;
   }
@@ -1151,7 +1341,7 @@ async function confirmarAberturaCaixa(){
 async function confirmarSangria(){
   const val=parseFloat(document.getElementById('sg-valor').value)||0;
   const motivo=document.getElementById('sg-motivo').value.trim()||'Sangria';
-  if(val<=0){toast('Informe um valor valido!');return;}
+  if(val<=0){toast('Informe um valor válido!');return;}
   mostrarLoading('Registrando sangria...');
   const nova = await dbInsert('sangrias',{valor:val, motivo, operador:usuarioLogado?usuarioLogado.nome:'-', data:new Date().toISOString()});
   if(nova) sangrias.push(nova);
@@ -1192,6 +1382,7 @@ function calcularResumoCaixa(){
 
 function renderCaixa(){
   const ab=!!caixaAtual;
+  const hoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
   document.getElementById('caixa-badge').textContent=ab?'Aberto':'Fechado';
   document.getElementById('caixa-badge').className='caixa-badge '+(ab?'aberto':'fechado');
   document.getElementById('btn-abrir-caixa').style.display=ab?'none':'';
@@ -1200,15 +1391,28 @@ function renderCaixa(){
   document.getElementById('caixa-info-texto').textContent=ab
     ?'Aberto em '+new Date(caixaAtual.abertura).toLocaleString('pt-BR')+' por '+caixaAtual.operador
     :'Caixa fechado. Abra o caixa para iniciar as vendas.';
-  const r=calcularResumoCaixa();
-  const si=caixaAtual?Number(caixaAtual.saldo_inicial):0;
-  document.getElementById('cx-abertura').textContent='R$ '+si.toFixed(2).replace('.',',');
-  document.getElementById('cx-dinheiro').textContent='R$ '+r.dinheiro.toFixed(2).replace('.',',');
-  document.getElementById('cx-cartao').textContent='R$ '+r.cartao.toFixed(2).replace('.',',');
-  document.getElementById('cx-pix').textContent='R$ '+r.pix.toFixed(2).replace('.',',');
-  document.getElementById('cx-sangrias').textContent='R$ '+r.sangriasDia.toFixed(2).replace('.',',');
-  document.getElementById('cx-despesas').textContent='R$ '+r.despesasDia.toFixed(2).replace('.',',');
-  document.getElementById('cx-saldo').textContent='R$ '+r.saldo.toFixed(2).replace('.',',');
+
+  // Atualizar título do card com a data atual
+  const cardTitle = document.querySelector('#tela-caixa .caixa-card h3');
+  if(cardTitle) cardTitle.textContent = 'Resumo — ' + hoje;
+
+  if(!ab){
+    // Caixa fechado: zerar resumo
+    ['cx-abertura','cx-dinheiro','cx-cartao','cx-pix','cx-sangrias','cx-despesas','cx-saldo'].forEach(id=>{
+      document.getElementById(id).textContent='R$ 0,00';
+    });
+  } else {
+    const r=calcularResumoCaixa();
+    const si=Number(caixaAtual.saldo_inicial);
+    document.getElementById('cx-abertura').textContent='R$ '+si.toFixed(2).replace('.',',');
+    document.getElementById('cx-dinheiro').textContent='R$ '+r.dinheiro.toFixed(2).replace('.',',');
+    document.getElementById('cx-cartao').textContent='R$ '+r.cartao.toFixed(2).replace('.',',');
+    document.getElementById('cx-pix').textContent='R$ '+r.pix.toFixed(2).replace('.',',');
+    document.getElementById('cx-sangrias').textContent='R$ '+r.sangriasDia.toFixed(2).replace('.',',');
+    document.getElementById('cx-despesas').textContent='R$ '+r.despesasDia.toFixed(2).replace('.',',');
+    document.getElementById('cx-saldo').textContent='R$ '+r.saldo.toFixed(2).replace('.',',');
+  }
+
   const hc=document.getElementById('historico-caixas');
   if(historicosCaixa.length===0){hc.innerHTML='<p style="color:var(--cinza);font-size:.81rem;text-align:center;padding:16px">Nenhum caixa fechado ainda.</p>';return;}
   hc.innerHTML='';
@@ -1267,6 +1471,7 @@ async function salvarDespesa(){
 }
 
 async function removerDespesa(id){
+  if(!exigirAdmin('remover despesas')) return;
   if(!confirm('Remover esta despesa?'))return;
   mostrarLoading('Removendo...');
   await dbDelete('despesas',id);
@@ -1289,7 +1494,7 @@ function renderDespesas(){
   [...despesas].sort((a,b)=>b.id-a.id).forEach(d=>{
     const dt=new Date(d.data+'T00:00:00').toLocaleDateString('pt-BR');
     const div=document.createElement('div');div.className='desp-item';
-    div.innerHTML=`<div class="desp-item-info"><div class="nome">${d.nome}</div><div class="det">${d.cat} — ${dt}</div></div>
+    div.innerHTML=`<div class="desp-item-info"><div class="nome">${esc(d.nome)}</div><div class="det">${esc(d.cat)} — ${dt}</div></div>
       <div style="display:flex;align-items:center;gap:9px">
         <span class="desp-item-val">R$ ${d.valor.toFixed(2).replace('.',',')}</span>
         <button class="btn-editar" onclick="abrirModalDesp(${d.id})">Editar</button>
@@ -1309,7 +1514,7 @@ function renderEstoque(){
     const st=p.estoque===0?'critico':p.estoque<=alerta?'baixo':'ok';
     const lb=p.estoque===0?'Sem estoque':p.estoque<=alerta?'Baixo':'OK';
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${p.nome}</td><td>${p.cat}</td><td>R$ ${p.preco.toFixed(2).replace('.',',')}</td>
+    tr.innerHTML=`<td>${esc(p.nome)}</td><td>${esc(p.cat)}</td><td>R$ ${p.preco.toFixed(2).replace('.',',')}</td>
       <td><strong>${p.estoque}</strong> un.</td><td>${alerta} un.</td>
       <td><span class="badge ${st}">${lb}</span></td>
       <td><button class="btn-editar" onclick="abrirModalProd(${p.id})">Editar</button>
@@ -1328,6 +1533,7 @@ function abrirModalProd(id=null){
 function fecharModalProd(){fecharModal('modal-prod-bg');editandoProdId=null;}
 
 async function removerProduto(id){
+  if(!exigirAdmin('remover produtos')) return;
   if(!confirm('Remover este produto?'))return;
   mostrarLoading('Removendo...');
   await dbDelete('produtos',id);
@@ -1337,6 +1543,7 @@ async function removerProduto(id){
 }
 
 async function salvarProduto(){
+  if(!exigirAdmin('gerenciar produtos')) return;
   const nome=document.getElementById('f-nome').value.trim();
   const cat=document.getElementById('f-cat').value;
   const preco=parseFloat(document.getElementById('f-preco').value);
@@ -1356,7 +1563,7 @@ async function salvarProduto(){
 // ═══════════════════════════════════════════════════
 function abrirModalFunc(id=null){
   editandoFuncId=id;
-  document.getElementById('modal-func-titulo').textContent=id?'Editar Funcionario':'Novo Funcionario';
+  document.getElementById('modal-func-titulo').textContent=id?'Editar Funcionário':'Novo Funcionário';
   if(id){const f=funcionarios.find(x=>x.id===id);document.getElementById('func-nome').value=f.nome;document.getElementById('func-cargo').value=f.cargo;document.getElementById('func-tel').value=f.tel||'';}
   else{document.getElementById('func-nome').value='';document.getElementById('func-tel').value='';document.getElementById('func-cargo').selectedIndex=0;}
   document.getElementById('modal-func-bg').classList.add('aberto');
@@ -1372,7 +1579,7 @@ async function salvarFuncionario(){
   else { await dbInsert('funcionarios',{nome,cargo,tel,pontos:[]}); }
   await carregarDados();
   esconderLoading();
-  fecharModal('modal-func-bg'); renderFuncionarios(); toast('Funcionario salvo!');
+  fecharModal('modal-func-bg'); renderFuncionarios(); toast('Funcionário salvo!');
 }
 
 async function registrarPonto(id,tipo){
@@ -1381,21 +1588,22 @@ async function registrarPonto(id,tipo){
   await dbUpdate('funcionarios',id,{pontos});
   f.pontos=pontos;
   renderFuncionarios();
-  toast((tipo==='entrada'?'Entrada':'Saida')+' de '+f.nome+' registrada!');
+  toast((tipo==='entrada'?'Entrada':'Saída')+' de '+f.nome+' registrada!');
 }
 
 async function removerFuncionario(id){
+  if(!exigirAdmin('remover funcionários')) return;
   if(!confirm('Remover este funcionario?'))return;
   mostrarLoading('Removendo...');
   await dbDelete('funcionarios',id);
   await carregarDados();
   esconderLoading();
-  renderFuncionarios(); toast('Funcionario removido.');
+  renderFuncionarios(); toast('Funcionário removido.');
 }
 
 function renderFuncionarios(){
   const el=document.getElementById('func-grid');
-  if(funcionarios.length===0){el.innerHTML='<p style="color:var(--cinza);font-size:.84rem;padding:20px">Nenhum funcionario cadastrado.</p>';return;}
+  if(funcionarios.length===0){el.innerHTML='<p style="color:var(--cinza);font-size:.84rem;padding:20px">Nenhum funcionário cadastrado.</p>';return;}
   el.innerHTML='';
   funcionarios.forEach(f=>{
     const pontos=f.pontos||[];
@@ -1405,15 +1613,15 @@ function renderFuncionarios(){
     let pontoInfo='Sem registro hoje';
     if(ultimoHoje){
       const hr=new Date(ultimoHoje.data);
-      pontoInfo=(ultimoHoje.tipo==='entrada'?'Entrada':'Saida')+' as '+hr.getHours().toString().padStart(2,'0')+':'+hr.getMinutes().toString().padStart(2,'0');
+      pontoInfo=(ultimoHoje.tipo==='entrada'?'Entrada':'Saída')+' às '+hr.getHours().toString().padStart(2,'0')+':'+hr.getMinutes().toString().padStart(2,'0');
     }
     const div=document.createElement('div');div.className='func-card';
-    div.innerHTML=`<div class="func-nome">${f.nome}</div>
-      <div class="func-cargo">${f.cargo}${f.tel?' — '+f.tel:''}</div>
+    div.innerHTML=`<div class="func-nome">${esc(f.nome)}</div>
+      <div class="func-cargo">${esc(f.cargo)}${f.tel?' — '+esc(f.tel):''}</div>
       <div class="func-ponto ${ultimoHoje&&ultimoHoje.tipo==='saida'?'saida':''}">${pontoInfo}</div>
       <div class="func-ponto-btns">
         <button class="btn-ponto entrada" onclick="registrarPonto(${f.id},'entrada')">Entrada</button>
-        <button class="btn-ponto saida" onclick="registrarPonto(${f.id},'saida')">Saida</button>
+        <button class="btn-ponto saida" onclick="registrarPonto(${f.id},'saida')">Saída</button>
       </div>
       <div style="display:flex;gap:6px;margin-top:7px">
         <button class="btn-editar" onclick="verHistoricoPonto(${f.id})" style="flex:1">Ver Ponto</button>
@@ -1485,7 +1693,7 @@ function renderRelatorios(){
     [...vfFiltradas].reverse().slice(0,30).forEach(v=>{
       const d=new Date(v.data);
       const hora=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-      const itensStr=v.itens.map(i=>i.qtd+'x '+i.nome).join(', ');
+      const itensStr=v.itens.map(i=>i.qtd+'x '+esc(i.nome)).join(', ');
       const div=document.createElement('div');div.className='venda-item';
       div.innerHTML=`<div><div>${itensStr}</div><div class="hora">${d.toLocaleDateString('pt-BR')} ${hora} — ${v.pgto||'-'}${v.desconto>0?' | desc: R$ '+v.desconto.toFixed(2).replace('.',','):''}</div></div>
         <div style="display:flex;align-items:center;gap:6px">
@@ -1507,7 +1715,7 @@ function renderRelatorios(){
   sorted.forEach(([nome,qtd])=>{
     const pct=Math.round((qtd/max)*100);
     const div=document.createElement('div');div.className='bar-row';
-    div.innerHTML=`<div class="bar-label"><span>${nome}</span><span><strong>${qtd}</strong> un.</span></div>
+    div.innerHTML=`<div class="bar-label"><span>${esc(nome)}</span><span><strong>${qtd}</strong> un.</span></div>
       <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>`;
     rkEl.appendChild(div);
   });
@@ -1519,7 +1727,7 @@ function renderRelatorios(){
   const pix=vf.filter(v=>v.pgto==='pix').reduce((s,v)=>s+v.total,0);
   const totalP=din+cart+pix||1;
   pgtoEl.innerHTML='';
-  [{label:'Dinheiro',val:din,cor:'#4a7c59'},{label:'Cartao',val:cart,cor:'#c87941'},{label:'Pix',val:pix,cor:'#3d1f0f'}].forEach(item=>{
+  [{label:'Dinheiro',val:din,cor:'#4a7c59'},{label:'Cartão',val:cart,cor:'#c87941'},{label:'Pix',val:pix,cor:'#3d1f0f'}].forEach(item=>{
     const pct=Math.round((item.val/totalP)*100);
     const div=document.createElement('div');div.className='pgto-fatia';
     div.innerHTML=`<div class="pf-val">R$ ${item.val.toFixed(2).replace('.',',')}</div>
@@ -1577,6 +1785,10 @@ function abrirNota(){
   document.getElementById('nota-conteudo').textContent=gerarTextoNota(ultimaVenda);
   document.getElementById('modal-nota-bg').classList.add('aberto');
 }
+function imprimirDoSucesso(){
+  fecharModal('modal-sucesso-bg');
+  abrirNota();
+}
 function imprimirNota(){
   if(!ultimaVenda)return;
   document.getElementById('nota-print').innerHTML='<pre style="font-family:Courier New,monospace;font-size:11px;line-height:1.6">'+gerarTextoNota(ultimaVenda).replace(/</g,'&lt;')+'</pre>';
@@ -1586,6 +1798,51 @@ function imprimirNota(){
 // ═══════════════════════════════════════════════════
 // BACKUP
 // ═══════════════════════════════════════════════════
+function confirmarAcaoDestrutiva(titulo, descricao, callback){
+  if(!exigirAdmin('executar esta ação')) return;
+  document.getElementById('modal-confirma-titulo').textContent = titulo;
+  document.getElementById('modal-confirma-desc').textContent = descricao;
+  document.getElementById('modal-confirma-input').value = '';
+  document.getElementById('modal-confirma-erro').style.display = 'none';
+  document.getElementById('modal-confirma-bg').classList.add('aberto');
+  document.getElementById('modal-confirma-btn').onclick = () => {
+    const digitado = document.getElementById('modal-confirma-input').value.trim();
+    if(digitado !== 'CONFIRMAR'){
+      document.getElementById('modal-confirma-erro').style.display = 'block';
+      return;
+    }
+    fecharModal('modal-confirma-bg');
+    callback();
+  };
+}
+
+async function limparDadosTeste(){
+  confirmarAcaoDestrutiva(
+    'Limpar Todos os Dados',
+    'Remove todas as vendas, despesas, sangrias e fecha o caixa. Produtos e funcionários são mantidos. Esta ação não pode ser desfeita.',
+    async () => {
+      mostrarLoading('Limpando dados...');
+      try {
+        await fetch(SUPA_URL+'/rest/v1/vendas?id=gt.0', {method:'DELETE', headers:HEADERS});
+        await fetch(SUPA_URL+'/rest/v1/despesas?id=gt.0', {method:'DELETE', headers:HEADERS});
+        await fetch(SUPA_URL+'/rest/v1/sangrias?id=gt.0', {method:'DELETE', headers:HEADERS});
+        await fetch(SUPA_URL+'/rest/v1/caixas?id=gt.0', {method:'DELETE', headers:HEADERS});
+        await carregarDados();
+        esconderLoading();
+        carrinho=[];
+        ultimaVenda=null;
+        caixaAtual=null;
+        renderCarrinho();
+        atualizarResumo();
+        toast('Dados de teste removidos com sucesso!');
+      } catch(e) {
+        esconderLoading();
+        toast('Erro ao limpar dados: '+e.message);
+      }
+    }
+  );
+}
+
 async function exportarDados(){
   mostrarLoading('Preparando backup...');
   await carregarDados();
@@ -1607,20 +1864,21 @@ async function renderBackupInfo(){
     Produtos cadastrados: <strong>${produtos.length}</strong><br>
     Vendas registradas: <strong>${vendas.length}</strong><br>
     Despesas registradas: <strong>${despesas.length}</strong><br>
-    Funcionarios: <strong>${funcionarios.length}</strong><br>
-    Historico de caixas: <strong>${historicosCaixa.length}</strong><br>
-    Ultima atualizacao: <strong>${new Date().toLocaleString('pt-BR')}</strong>
+    Funcionários: <strong>${funcionarios.length}</strong><br>
+    Histórico de caixas: <strong>${historicosCaixa.length}</strong><br>
+    Última atualização: <strong>${new Date().toLocaleString('pt-BR')}</strong>
   `;
 }
 
 function importarDados(event){
+  if(!exigirAdmin('importar backup')){ event.target.value=''; return; }
   const file=event.target.files[0];if(!file)return;
-  if(!confirm('Isso substituira TODOS os dados atuais. Deseja continuar?')){event.target.value='';return;}
+  if(!confirm('Isso substituirá TODOS os dados atuais. Deseja continuar?')){event.target.value='';return;}
   const reader=new FileReader();
   reader.onload=e=>{
     try{
       const dados=JSON.parse(e.target.result);
-      if(!dados.produtos||!dados.vendas){toast('Arquivo invalido!');return;}
+      if(!dados.produtos||!dados.vendas){toast('Arquivo inválido!');return;}
       produtos=dados.produtos||[];
       vendas=dados.vendas||[];
       despesas=dados.despesas||[];
@@ -1645,9 +1903,9 @@ function renderBackupInfo(){
     Produtos cadastrados: <strong>${produtos.length}</strong><br>
     Vendas registradas: <strong>${vendas.length}</strong><br>
     Despesas registradas: <strong>${despesas.length}</strong><br>
-    Funcionarios: <strong>${funcionarios.length}</strong><br>
-    Historico de caixas: <strong>${historicosCaixa.length}</strong><br>
-    Ultima atualizacao: <strong>${new Date().toLocaleString('pt-BR')}</strong>
+    Funcionários: <strong>${funcionarios.length}</strong><br>
+    Histórico de caixas: <strong>${historicosCaixa.length}</strong><br>
+    Última atualização: <strong>${new Date().toLocaleString('pt-BR')}</strong>
   `;
 }
 
@@ -1669,7 +1927,7 @@ async function confirmarTrocaSenha(){
   const conf = document.getElementById('ts-confirma').value;
   const erroEl = document.getElementById('ts-erro');
   if(nova.length < 6){ erroEl.textContent='Nova senha deve ter ao menos 6 caracteres.'; erroEl.style.display='block'; return; }
-  if(nova !== conf){ erroEl.textContent='As senhas nao coincidem.'; erroEl.style.display='block'; return; }
+  if(nova !== conf){ erroEl.textContent='As senhas não coincidem.'; erroEl.style.display='block'; return; }
 
   try {
     const r = await fetch(SUPA_URL+'/auth/v1/user', {
@@ -1681,7 +1939,7 @@ async function confirmarTrocaSenha(){
     fecharModal('modal-senha-bg');
     toast('Senha alterada com sucesso!');
   } catch(e) {
-    erroEl.textContent='Erro de conexao.'; erroEl.style.display='block';
+    erroEl.textContent='Erro de conexão.'; erroEl.style.display='block';
   }
 }
 
@@ -1727,7 +1985,7 @@ function limparBusca(){
 function verHistoricoPonto(funcId){
   const f = funcionarios.find(x => x.id === funcId);
   if(!f) return;
-  document.getElementById('historico-ponto-titulo').textContent = 'Historico de Ponto — ' + f.nome;
+  document.getElementById('historico-ponto-titulo').textContent = 'Histórico de Ponto — ' + esc(f.nome);
   document.getElementById('historico-ponto-area').style.display = 'block';
   const lista = document.getElementById('historico-ponto-lista');
   const pontos = (f.pontos || []).slice().reverse();
@@ -1742,7 +2000,7 @@ function verHistoricoPonto(funcId){
       const hr = new Date(p.data);
       const hora = hr.getHours().toString().padStart(2,'0')+':'+hr.getMinutes().toString().padStart(2,'0');
       const cor = p.tipo==='entrada'?'var(--verde)':'var(--vermelho)';
-      return `<span style="display:inline-block;margin-right:16px;color:${cor};font-size:.83rem;font-weight:600">${p.tipo==='entrada'?'Entrada':'Saida'}: ${hora}</span>`;
+      return `<span style="display:inline-block;margin-right:16px;color:${cor};font-size:.83rem;font-weight:600">${p.tipo==='entrada'?'Entrada':'Saída'}: ${hora}</span>`;
     }).join('');
     bloco.innerHTML = `<div style="font-weight:700;font-size:.85rem;margin-bottom:6px">${dia}</div>${linhas}`;
     lista.appendChild(bloco);
@@ -1764,7 +2022,7 @@ function toast(msg){
 }
 
 // Fechar modais ao clicar fora
-['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg'].forEach(id=>{
+['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
 });
 </script>
