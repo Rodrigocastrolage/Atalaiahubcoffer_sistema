@@ -22,6 +22,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--espres
 .btn-login:hover{background:#b5682e}
 .login-hint{font-size:.74rem;color:var(--cinza);margin-top:13px}
 
+/* CATEGORIAS PDV */
+.pdv-categorias{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.cat-btn{padding:6px 16px;border-radius:20px;border:1.5px solid #ddd;background:white;cursor:pointer;font-size:.79rem;font-weight:600;color:var(--cinza);font-family:'DM Sans',sans-serif;transition:all .18s;white-space:nowrap}
+.cat-btn:hover{border-color:var(--caramelo);color:var(--caramelo)}
+.cat-btn.ativo{background:var(--espresso);color:white;border-color:var(--espresso)}
+.cat-btn .cat-qtd{display:inline-block;background:rgba(255,255,255,.25);border-radius:10px;padding:0 6px;font-size:.7rem;margin-left:4px}
+.cat-btn:not(.ativo) .cat-qtd{background:var(--creme);color:var(--cinza)}
+
 /* TOPBAR */
 .topbar{background:var(--espresso);color:var(--creme);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.3)}
 .topbar-logo{font-family:'Playfair Display',serif;font-size:1.25rem}
@@ -359,6 +367,7 @@ tr:hover td{background:#fdf8f4}
     <button class="nav-btn" onclick="ir('estoque',this)">Estoque</button>
     <button class="nav-btn" onclick="ir('funcionarios',this)">Funcionários</button>
     <button class="nav-btn" onclick="ir('relatorios',this)">Relatórios</button>
+    <button class="nav-btn" onclick="ir('ifood',this)">iFood</button>
     <button class="nav-btn" onclick="ir('backup',this)">Backup</button>
   </nav>
   <div class="topbar-right">
@@ -379,6 +388,7 @@ tr:hover td{background:#fdf8f4}
     <div class="resumo-card amarelo"><label>Ticket Médio</label><div class="valor" id="r-ticket">R$ 0,00</div><div class="sub">por pedido</div></div>
     <div class="resumo-card vermelho"><label>Estoque Crítico</label><div class="valor" id="r-critico">0</div><div class="sub">itens em falta</div></div>
   </div>
+  <div class="pdv-categorias" id="pdv-categorias"></div>
   <div class="pdv-grid">
     <div><div class="produtos-grid" id="grade-produtos"></div></div>
     <div class="carrinho-box">
@@ -490,7 +500,10 @@ tr:hover td{background:#fdf8f4}
 <div class="tela" id="tela-estoque">
   <div class="estoque-header">
     <div class="sec-header" style="margin:0"><h2>Controle de Estoque</h2><p>Gerencie produtos e quantidades</p></div>
-    <button class="btn-add" onclick="abrirModalProd()">+ Novo Produto</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-add" id="btn-remover-dupl" onclick="removerDuplicatasProdutos()" style="background:#b84040;display:none">Remover Duplicatas</button>
+      <button class="btn-add" onclick="abrirModalProd()">+ Novo Produto</button>
+    </div>
   </div>
   <div class="tabela-wrapper">
   <table>
@@ -561,6 +574,39 @@ tr:hover td{background:#fdf8f4}
   <div style="margin-top:18px" class="rel-card">
     <h3>Vendas por Forma de Pagamento</h3>
     <div class="pgto-pizza" id="pgto-pizza"></div>
+  </div>
+</div>
+
+<!-- IFOOD -->
+<div class="tela" id="tela-ifood">
+  <div class="ifood-header">
+    <div class="sec-header" style="margin:0">
+      <h2 style="display:flex;align-items:center;gap:10px">
+        <span class="ifood-logo-badge">iF</span> Pedidos iFood
+      </h2>
+      <p>Gerencie os pedidos recebidos pelo iFood</p>
+    </div>
+    <button class="btn-add" onclick="abrirModalIfood()" style="background:#ea1d2c">+ Novo Pedido</button>
+  </div>
+
+  <div class="ifood-resumo">
+    <div class="ifood-card"><label>Pedidos Hoje</label><div class="valor" id="if-total-hoje">0</div><div class="sub" id="if-fat-hoje">R$ 0,00</div></div>
+    <div class="ifood-card amarelo"><label>Em Preparo</label><div class="valor" id="if-preparando">0</div><div class="sub">aguardando entrega</div></div>
+    <div class="ifood-card verde"><label>Entregues Hoje</label><div class="valor" id="if-entregues">0</div><div class="sub" id="if-fat-entregues">R$ 0,00</div></div>
+    <div class="ifood-card cinza"><label>Cancelados Hoje</label><div class="valor" id="if-cancelados">0</div><div class="sub">pedidos cancelados</div></div>
+  </div>
+
+  <div class="ifood-filtros">
+    <button class="ifood-filtro-btn ativo" onclick="filtrarIfood('todos',this)">Todos</button>
+    <button class="ifood-filtro-btn" onclick="filtrarIfood('recebido',this)">Recebidos</button>
+    <button class="ifood-filtro-btn" onclick="filtrarIfood('preparando',this)">Preparando</button>
+    <button class="ifood-filtro-btn" onclick="filtrarIfood('pronto',this)">Prontos</button>
+    <button class="ifood-filtro-btn" onclick="filtrarIfood('entregue',this)">Entregues</button>
+    <button class="ifood-filtro-btn" onclick="filtrarIfood('cancelado',this)">Cancelados</button>
+  </div>
+
+  <div class="ifood-lista" id="ifood-lista">
+    <div class="ifood-vazio">Nenhum pedido iFood registrado ainda.</div>
   </div>
 </div>
 
@@ -723,6 +769,48 @@ tr:hover td{background:#fdf8f4}
   </div>
 </div>
 
+<!-- MODAL IFOOD -->
+<div class="modal-bg" id="modal-ifood-bg">
+  <div class="modal" style="max-width:480px">
+    <h3 id="modal-ifood-titulo">Novo Pedido iFood</h3>
+    <div class="form-group">
+      <label>Número do Pedido</label>
+      <input id="if-numero" placeholder="Ex: #ABC-123456">
+    </div>
+    <div class="form-group">
+      <label>Cliente</label>
+      <input id="if-cliente" placeholder="Nome do cliente">
+    </div>
+    <div class="form-group">
+      <label>Itens do Pedido</label>
+      <textarea id="if-itens" placeholder="Ex: 2x Cappuccino, 1x Coxinha" rows="3"
+        style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;resize:vertical"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Valor Total (R$)</label>
+      <input id="if-valor" type="number" step="0.01" placeholder="0,00">
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="if-status">
+        <option value="recebido">Recebido</option>
+        <option value="preparando">Preparando</option>
+        <option value="pronto">Pronto para Entrega</option>
+        <option value="entregue">Entregue</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <input id="if-obs" placeholder="Ex: Sem cebola, entregar no portão...">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="fecharModal('modal-ifood-bg')">Cancelar</button>
+      <button class="btn-salvar" onclick="salvarPedidoIfood()" style="background:#ea1d2c">Salvar Pedido</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMACAO DESTRUTIVA -->
 <div class="modal-bg" id="modal-confirma-bg">
   <div class="modal" style="text-align:center">
@@ -749,6 +837,51 @@ tr:hover td{background:#fdf8f4}
   <div id="loading-msg" style="color:white;font-size:.9rem;font-weight:500;font-family:'DM Sans',sans-serif">Carregando...</div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════════════════
+   IFOOD
+═══════════════════════════════════════════════════ */
+.ifood-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+.ifood-resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin-bottom:20px}
+.ifood-card{background:white;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--sombra);border-left:4px solid #ea1d2c}
+.ifood-card.verde{border-color:var(--verde)}
+.ifood-card.amarelo{border-color:var(--amarelo)}
+.ifood-card.cinza{border-color:#aaa}
+.ifood-card label{font-size:.72rem;color:var(--cinza);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.ifood-card .valor{font-size:1.35rem;font-weight:700;color:var(--espresso);margin-top:3px}
+.ifood-card .sub{font-size:.72rem;color:var(--cinza);margin-top:2px}
+.ifood-filtros{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.ifood-filtro-btn{padding:5px 14px;border-radius:20px;border:1.5px solid #ddd;background:white;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--cinza);font-family:'DM Sans',sans-serif;transition:.2s}
+.ifood-filtro-btn:hover{border-color:#ea1d2c;color:#ea1d2c}
+.ifood-filtro-btn.ativo{background:#ea1d2c;color:white;border-color:#ea1d2c}
+.ifood-lista{display:flex;flex-direction:column;gap:10px}
+.ifood-pedido{background:white;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--sombra);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;border-left:4px solid #ddd;transition:.2s}
+.ifood-pedido.recebido{border-color:#ea1d2c}
+.ifood-pedido.preparando{border-color:var(--amarelo)}
+.ifood-pedido.pronto{border-color:#3a9e6a}
+.ifood-pedido.entregue{border-color:#aaa;opacity:.75}
+.ifood-pedido.cancelado{border-color:#ccc;opacity:.55}
+.ifood-pedido-info{flex:1}
+.ifood-pedido-num{font-weight:700;font-size:.88rem;color:var(--espresso)}
+.ifood-pedido-cliente{font-size:.82rem;color:var(--cinza);margin-top:2px}
+.ifood-pedido-itens{font-size:.8rem;color:var(--espresso);margin-top:5px;line-height:1.5}
+.ifood-pedido-obs{font-size:.76rem;color:var(--cinza);font-style:italic;margin-top:3px}
+.ifood-pedido-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;min-width:120px}
+.ifood-pedido-total{font-weight:700;font-size:1rem;color:var(--espresso)}
+.ifood-pedido-hora{font-size:.72rem;color:var(--cinza)}
+.ifood-status-badge{padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.ifood-status-badge.recebido{background:#fdeaea;color:#ea1d2c}
+.ifood-status-badge.preparando{background:#fff4e0;color:#b8892a}
+.ifood-status-badge.pronto{background:#e6f4ec;color:#2d7a50}
+.ifood-status-badge.entregue{background:#f0f0f0;color:#777}
+.ifood-status-badge.cancelado{background:#f5f5f5;color:#aaa}
+.ifood-pedido-acoes{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.btn-ifood-status{padding:4px 10px;border-radius:6px;border:1.5px solid var(--caramelo);background:none;color:var(--caramelo);font-size:.74rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s}
+.btn-ifood-status:hover{background:var(--caramelo);color:white}
+.btn-ifood-cancelar{border-color:#ea1d2c;color:#ea1d2c}
+.btn-ifood-cancelar:hover{background:#ea1d2c;color:white}
+.ifood-vazio{text-align:center;color:var(--cinza);font-size:.85rem;padding:32px;background:white;border-radius:var(--radius);box-shadow:var(--sombra)}
+.ifood-logo-badge{display:inline-flex;align-items:center;gap:5px;background:#ea1d2c;color:white;padding:3px 10px;border-radius:6px;font-size:.72rem;font-weight:700;letter-spacing:.5px}
 
 /* ═══════════════════════════════════════════════════
    RESPONSIVIDADE MOBILE
@@ -992,7 +1125,7 @@ function esc(str){
 // ═══════════════════════════════════════════════════
 // DADOS EM MEMÓRIA
 // ═══════════════════════════════════════════════════
-let produtos=[], vendas=[], despesas=[], sangrias=[], funcionarios=[], caixaAtual=null, historicosCaixa=[];
+let produtos=[], vendas=[], despesas=[], sangrias=[], funcionarios=[], caixaAtual=null, historicosCaixa=[], pedidosIfood=[];
 let metas={diaria:0, mensal:0};
 let carrinho=[], formaPgto='dinheiro', editandoProdId=null, editandoDespId=null, editandoFuncId=null;
 let filtroAtual='hoje', ultimaVenda=null, descontoAtual=0;
@@ -1006,7 +1139,16 @@ function esconderLoading(){ document.getElementById('loading-overlay').style.dis
 async function carregarDados(){
   mostrarLoading('Conectando ao banco de dados...');
   try {
-    produtos = await dbGet('produtos');
+    const rawProdutos = await dbGet('produtos');
+    // Deduplicar por nome (mantém o registro com maior ID, ou seja, o mais recente)
+    const mapaProds = {};
+    rawProdutos.forEach(p => {
+      const chave = p.nome.trim().toLowerCase();
+      if(!mapaProds[chave] || p.id > mapaProds[chave].id) mapaProds[chave] = p;
+    });
+    const duplicados = rawProdutos.length - Object.keys(mapaProds).length;
+    produtos = Object.values(mapaProds);
+    if(duplicados > 0) console.warn(`[Estoque] ${duplicados} produto(s) duplicado(s) ignorado(s) na exibição. Use "Remover Duplicatas" para limpar o banco.`);
     const v = await dbGet('vendas');
     vendas = v.map(x=>({...x, itens: x.itens||[]}));
     despesas = await dbGet('despesas');
@@ -1015,6 +1157,7 @@ async function carregarDados(){
     funcionarios = f.map(x=>({...x, pontos: x.pontos||[]}));
     historicosCaixa = await dbGet('caixas','aberto=eq.false');
     caixaAtual = await dbGetOne('caixas','aberto=eq.true') || null;
+    try { pedidosIfood = await dbGet('pedidos_ifood'); } catch(e){ pedidosIfood = []; }
 
     const md = await dbGetConfig('meta_diaria');
     const mm = await dbGetConfig('meta_mensal');
@@ -1043,7 +1186,7 @@ async function salvarMeta(){
 // ═══════════════════════════════════════════════════
 async function iniciarSistema(){
   await carregarDados();
-  renderProdutos(); atualizarResumo(); verificarAlertas(); atualizarAvisoCaixa();
+  renderCategoriasPDV(); renderProdutos(); atualizarResumo(); verificarAlertas(); atualizarAvisoCaixa();
   setInterval(()=>{
     const h=new Date();
     document.getElementById('hora').textContent=h.getHours().toString().padStart(2,'0')+':'+h.getMinutes().toString().padStart(2,'0');
@@ -1083,12 +1226,13 @@ async function ir(tela,btn){
   mostrarLoading('Atualizando...');
   await carregarDados();
   esconderLoading();
-  if(tela==='pdv'){renderProdutos();atualizarResumo();verificarAlertas();atualizarAvisoCaixa();}
+  if(tela==='pdv'){renderCategoriasPDV();renderProdutos();atualizarResumo();verificarAlertas();atualizarAvisoCaixa();}
   if(tela==='estoque')renderEstoque();
   if(tela==='relatorios')renderRelatorios();
   if(tela==='caixa'){renderCaixa();renderMeta();}
   if(tela==='despesas')renderDespesas();
   if(tela==='funcionarios')renderFuncionarios();
+  if(tela==='ifood')renderIfood();
   if(tela==='backup')renderBackupInfo();
 }
 
@@ -1142,9 +1286,41 @@ function verificarAlertas(){
 // ═══════════════════════════════════════════════════
 // PDV
 // ═══════════════════════════════════════════════════
+let filtroCatPDV = 'Todos';
+
+const ICONE_CAT = {
+  'Todos':          'Todos',
+  'Bebidas Quentes':'Cafe',
+  'Bebidas Frias':  'Bebidas',
+  'Salgados':       'Salgados',
+  'Doces':          'Doces',
+  'Outros':         'Outros'
+};
+
+function renderCategoriasPDV(){
+  const el = document.getElementById('pdv-categorias');
+  if(!el) return;
+  // Descobrir categorias presentes nos produtos
+  const cats = ['Todos', ...new Set(produtos.map(p => p.cat).filter(Boolean))];
+  el.innerHTML = '';
+  cats.forEach(cat => {
+    const qtd = cat === 'Todos' ? produtos.length : produtos.filter(p => p.cat === cat && p.estoque > 0).length;
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (filtroCatPDV === cat ? ' ativo' : '');
+    btn.innerHTML = (ICONE_CAT[cat] || cat) + `<span class="cat-qtd">${qtd}</span>`;
+    btn.onclick = () => { filtroCatPDV = cat; renderCategoriasPDV(); renderProdutos(); };
+    el.appendChild(btn);
+  });
+}
+
 function renderProdutos(){
   const g=document.getElementById('grade-produtos');g.innerHTML='';
-  produtos.forEach(p=>{
+  const lista = filtroCatPDV === 'Todos' ? produtos : produtos.filter(p => p.cat === filtroCatPDV);
+  if(lista.length === 0){
+    g.innerHTML = '<div style="color:var(--cinza);font-size:.85rem;padding:20px">Nenhum produto nesta categoria.</div>';
+    return;
+  }
+  lista.forEach(p=>{
     const semEst=p.estoque===0;
     const baixo=!semEst&&p.estoque<=(p.alerta||5);
     const d=document.createElement('div');
@@ -1305,7 +1481,7 @@ async function finalizarVenda(){
   descontoAtual=0;
   carrinho=[];
   await carregarDados();
-  renderCarrinho(); renderProdutos(); atualizarResumo(); verificarAlertas();
+  renderCarrinho(); renderCategoriasPDV(); renderProdutos(); atualizarResumo(); verificarAlertas();
 }
 
 function atualizarResumo(){
@@ -1507,8 +1683,47 @@ function renderDespesas(){
 // ═══════════════════════════════════════════════════
 // ESTOQUE
 // ═══════════════════════════════════════════════════
+async function removerDuplicatasProdutos(){
+  if(!exigirAdmin('remover duplicatas')) return;
+  confirmarAcaoDestrutiva(
+    'Remover Produtos Duplicados',
+    'Mantém apenas um registro de cada produto (o mais recente) e apaga os demais do banco. Esta ação não pode ser desfeita.',
+    async () => {
+      mostrarLoading('Removendo duplicatas...');
+      const rawProdutos = await dbGet('produtos');
+      const mapaProds = {};
+      const paraApagar = [];
+      rawProdutos.forEach(p => {
+        const chave = p.nome.trim().toLowerCase();
+        if(!mapaProds[chave] || p.id > mapaProds[chave].id){
+          if(mapaProds[chave]) paraApagar.push(mapaProds[chave].id);
+          mapaProds[chave] = p;
+        } else {
+          paraApagar.push(p.id);
+        }
+      });
+      if(paraApagar.length === 0){ esconderLoading(); toast('Nenhuma duplicata encontrada.'); return; }
+      for(const id of paraApagar) await dbDelete('produtos', id);
+      await carregarDados();
+      esconderLoading();
+      renderEstoque();
+      toast(`${paraApagar.length} duplicata(s) removida(s) com sucesso!`);
+    }
+  );
+}
+
 function renderEstoque(){
   const tb=document.getElementById('tabela-estoque');tb.innerHTML='';
+  // Detectar duplicatas no banco (antes da deduplicação em memória)
+  const btnDupl = document.getElementById('btn-remover-dupl');
+  if(btnDupl && isAdmin()){
+    dbGet('produtos').then(raw => {
+      const nomes = raw.map(p => p.nome.trim().toLowerCase());
+      const temDupl = nomes.length !== new Set(nomes).size;
+      btnDupl.style.display = temDupl ? '' : 'none';
+      if(temDupl) btnDupl.textContent = `Remover Duplicatas (${nomes.length - new Set(nomes).size} excesso)`;
+    }).catch(()=>{});
+  }
   produtos.forEach(p=>{
     const alerta=p.alerta||5;
     const st=p.estoque===0?'critico':p.estoque<=alerta?'baixo':'ok';
@@ -1660,6 +1875,26 @@ function renderRelatorios(){
   document.getElementById('rel-ped').textContent=vf.length;
   document.getElementById('rel-tick').textContent='R$ '+(vf.length>0?(fat/vf.length).toFixed(2):'0,00').replace('.',',');
   document.getElementById('rel-itens').textContent=itens;
+  // iFood no faturamento
+  const hoje2=new Date().toDateString();
+  const ifoodFat = pedidosIfood
+    .filter(p => p.status !== 'cancelado')
+    .filter(p => {
+      const d = new Date(p.data);
+      if(filtroAtual==='hoje') return d.toDateString()===new Date().toDateString();
+      if(filtroAtual==='semana'){const s=new Date();s.setDate(s.getDate()-7);return d>=s;}
+      if(filtroAtual==='mes') return d.getMonth()===new Date().getMonth()&&d.getFullYear()===new Date().getFullYear();
+      return true;
+    })
+    .reduce((s,p) => s + Number(p.total), 0);
+  if(ifoodFat > 0){
+    const fatTotal = fat + ifoodFat;
+    if(document.getElementById('rel-fat'))
+      document.getElementById('rel-fat').innerHTML = 'R$ '+fatTotal.toFixed(2).replace('.',',')
+        +'<div style="font-size:.65rem;color:var(--cinza);font-weight:400;margin-top:2px">PDV: R$ '+fat.toFixed(2).replace('.',',')
+        +' + iFood: R$ '+ifoodFat.toFixed(2).replace('.',',')+'</div>';
+  }
+
   // Lucro real
   const agora=new Date();
   const despFiltradas=despesas.filter(d=>{
@@ -1793,6 +2028,151 @@ function imprimirNota(){
   if(!ultimaVenda)return;
   document.getElementById('nota-print').innerHTML='<pre style="font-family:Courier New,monospace;font-size:11px;line-height:1.6">'+gerarTextoNota(ultimaVenda).replace(/</g,'&lt;')+'</pre>';
   window.print();
+}
+
+// ═══════════════════════════════════════════════════
+// IFOOD
+// ═══════════════════════════════════════════════════
+let filtroIfoodAtual = 'todos';
+let editandoIfoodId = null;
+
+function filtrarIfood(status, btn){
+  filtroIfoodAtual = status;
+  document.querySelectorAll('.ifood-filtro-btn').forEach(b => b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  renderIfood();
+}
+
+function abrirModalIfood(id=null){
+  editandoIfoodId = id;
+  document.getElementById('modal-ifood-titulo').textContent = id ? 'Editar Pedido iFood' : 'Novo Pedido iFood';
+  if(id){
+    const p = pedidosIfood.find(x => x.id === id);
+    if(p){
+      document.getElementById('if-numero').value = p.numero || '';
+      document.getElementById('if-cliente').value = p.cliente || '';
+      document.getElementById('if-itens').value = p.itens_texto || '';
+      document.getElementById('if-valor').value = p.total || '';
+      document.getElementById('if-status').value = p.status || 'recebido';
+      document.getElementById('if-obs').value = p.obs || '';
+    }
+  } else {
+    document.getElementById('if-numero').value = '';
+    document.getElementById('if-cliente').value = '';
+    document.getElementById('if-itens').value = '';
+    document.getElementById('if-valor').value = '';
+    document.getElementById('if-status').value = 'recebido';
+    document.getElementById('if-obs').value = '';
+  }
+  document.getElementById('modal-ifood-bg').classList.add('aberto');
+}
+
+async function salvarPedidoIfood(){
+  const numero  = document.getElementById('if-numero').value.trim();
+  const cliente = document.getElementById('if-cliente').value.trim();
+  const itens_texto = document.getElementById('if-itens').value.trim();
+  const total   = parseFloat(document.getElementById('if-valor').value) || 0;
+  const status  = document.getElementById('if-status').value;
+  const obs     = document.getElementById('if-obs').value.trim();
+  if(!cliente && !numero){ toast('Informe o número ou o cliente do pedido.'); return; }
+  mostrarLoading('Salvando pedido iFood...');
+  const obj = { numero, cliente, itens_texto, total, status, obs, data: new Date().toISOString() };
+  try {
+    if(editandoIfoodId){
+      await dbUpdate('pedidos_ifood', editandoIfoodId, obj);
+    } else {
+      await dbInsert('pedidos_ifood', obj);
+    }
+    try { pedidosIfood = await dbGet('pedidos_ifood'); } catch(e){}
+    esconderLoading();
+    fecharModal('modal-ifood-bg');
+    renderIfood();
+    toast('Pedido iFood salvo!');
+  } catch(e){
+    esconderLoading();
+    toast('Erro ao salvar: verifique se a tabela pedidos_ifood existe no Supabase.');
+  }
+}
+
+async function atualizarStatusIfood(id, novoStatus){
+  mostrarLoading('Atualizando status...');
+  await dbUpdate('pedidos_ifood', id, { status: novoStatus });
+  const p = pedidosIfood.find(x => x.id === id);
+  if(p) p.status = novoStatus;
+  esconderLoading();
+  renderIfood();
+  const labels = { preparando:'Preparando', pronto:'Pronto para entrega', entregue:'Entregue', cancelado:'Cancelado' };
+  toast('Status atualizado: ' + (labels[novoStatus] || novoStatus));
+}
+
+async function removerPedidoIfood(id){
+  if(!confirm('Remover este pedido iFood?')) return;
+  mostrarLoading('Removendo...');
+  await dbDelete('pedidos_ifood', id);
+  pedidosIfood = pedidosIfood.filter(x => x.id !== id);
+  esconderLoading();
+  renderIfood();
+  toast('Pedido removido.');
+}
+
+function renderIfood(){
+  const hoje = new Date().toDateString();
+  const todosHoje = pedidosIfood.filter(p => new Date(p.data).toDateString() === hoje);
+  const entreguesHoje = todosHoje.filter(p => p.status === 'entregue');
+  const preparandoAtivos = pedidosIfood.filter(p => p.status === 'preparando' || p.status === 'recebido' || p.status === 'pronto');
+  const canceladosHoje = todosHoje.filter(p => p.status === 'cancelado');
+  const fatHoje = todosHoje.reduce((s,p) => s + Number(p.total), 0);
+  const fatEntregues = entreguesHoje.reduce((s,p) => s + Number(p.total), 0);
+
+  document.getElementById('if-total-hoje').textContent = todosHoje.length;
+  document.getElementById('if-fat-hoje').textContent = 'R$ ' + fatHoje.toFixed(2).replace('.',',');
+  document.getElementById('if-preparando').textContent = preparandoAtivos.length;
+  document.getElementById('if-entregues').textContent = entreguesHoje.length;
+  document.getElementById('if-fat-entregues').textContent = 'R$ ' + fatEntregues.toFixed(2).replace('.',',');
+  document.getElementById('if-cancelados').textContent = canceladosHoje.length;
+
+  const el = document.getElementById('ifood-lista');
+  let lista = [...pedidosIfood].reverse();
+  if(filtroIfoodAtual !== 'todos') lista = lista.filter(p => p.status === filtroIfoodAtual);
+
+  if(lista.length === 0){
+    el.innerHTML = '<div class="ifood-vazio">Nenhum pedido encontrado para este filtro.</div>';
+    return;
+  }
+
+  el.innerHTML = '';
+  const statusLabel = { recebido:'Recebido', preparando:'Preparando', pronto:'Pronto', entregue:'Entregue', cancelado:'Cancelado' };
+
+  lista.forEach(p => {
+    const d = new Date(p.data);
+    const hora = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    const dataStr = d.toLocaleDateString('pt-BR');
+
+    let botoesAcao = '';
+    if(p.status === 'recebido')   botoesAcao += `<button class="btn-ifood-status" onclick="atualizarStatusIfood(${p.id},'preparando')">Preparando</button>`;
+    if(p.status === 'preparando') botoesAcao += `<button class="btn-ifood-status" onclick="atualizarStatusIfood(${p.id},'pronto')">Pronto</button>`;
+    if(p.status === 'pronto')     botoesAcao += `<button class="btn-ifood-status" onclick="atualizarStatusIfood(${p.id},'entregue')">Entregue</button>`;
+    if(p.status !== 'entregue' && p.status !== 'cancelado')
+      botoesAcao += `<button class="btn-ifood-status btn-ifood-cancelar" onclick="atualizarStatusIfood(${p.id},'cancelado')">Cancelar</button>`;
+    botoesAcao += `<button class="btn-editar" onclick="abrirModalIfood(${p.id})" style="font-size:.72rem">Editar</button>`;
+    botoesAcao += `<button class="btn-remover" onclick="removerPedidoIfood(${p.id})" style="font-size:.72rem">Remover</button>`;
+
+    const div = document.createElement('div');
+    div.className = 'ifood-pedido ' + (p.status || 'recebido');
+    div.innerHTML = `
+      <div class="ifood-pedido-info">
+        <div class="ifood-pedido-num">${esc(p.numero) || 'Sem número'} <span class="ifood-status-badge ${p.status||'recebido'}">${statusLabel[p.status]||p.status}</span></div>
+        <div class="ifood-pedido-cliente">${esc(p.cliente) || 'Cliente não informado'}</div>
+        <div class="ifood-pedido-itens">${esc(p.itens_texto) || '—'}</div>
+        ${p.obs ? `<div class="ifood-pedido-obs">Obs: ${esc(p.obs)}</div>` : ''}
+      </div>
+      <div class="ifood-pedido-right">
+        <div class="ifood-pedido-total">R$ ${Number(p.total).toFixed(2).replace('.',',')}</div>
+        <div class="ifood-pedido-hora">${dataStr} ${hora}</div>
+        <div class="ifood-pedido-acoes">${botoesAcao}</div>
+      </div>`;
+    el.appendChild(div);
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -2022,7 +2402,7 @@ function toast(msg){
 }
 
 // Fechar modais ao clicar fora
-['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg'].forEach(id=>{
+['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
 });
 </script>
