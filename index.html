@@ -263,7 +263,6 @@ tr:hover td{background:#fdf8f4}
 .toast.show{transform:translateY(0);opacity:1}
 
 #nota-print{display:none}
-@media print{body *{visibility:hidden}#nota-print,#nota-print *{visibility:visible}#nota-print{display:block !important;position:fixed;inset:0;width:80mm;margin:0 auto;padding:10mm 8mm;font-family:'Courier New',monospace;font-size:11px;color:#000;background:white}}
 @media(max-width:860px){.pdv-grid,.caixa-grid,.rel-grid,.backup-grid{grid-template-columns:1fr}.topbar-nav{gap:2px}.nav-btn{padding:5px 7px;font-size:.72rem}}
 
 /* ── MOBILE ─────────────────────────────────────────── */
@@ -2184,9 +2183,47 @@ function imprimirDoSucesso(){
   abrirNota();
 }
 function imprimirNota(){
-  if(!ultimaVenda)return;
-  document.getElementById('nota-print').innerHTML='<pre style="font-family:Courier New,monospace;font-size:11px;line-height:1.6">'+gerarTextoNota(ultimaVenda).replace(/</g,'&lt;')+'</pre>';
-  window.print();
+  if(!ultimaVenda) return;
+  const texto = gerarTextoNota(ultimaVenda)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const janela = window.open('', '_blank', 'width=340,height=700,scrollbars=no');
+  if(!janela){ toast('Bloqueador de pop-up ativo. Permita pop-ups para imprimir.'); return; }
+
+  janela.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Recibo</title>
+<style>
+  @page { size: 80mm auto; margin: 4mm 3mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    color: #000;
+    background: #fff;
+    width: 74mm;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: inherit;
+    font-size: inherit;
+  }
+</style>
+</head>
+<body>
+<pre>${texto}</pre>
+<script>
+  window.onload = function(){
+    setTimeout(function(){ window.print(); window.close(); }, 300);
+  };
+<\/script>
+</body>
+</html>`);
+  janela.document.close();
 }
 
 // ═══════════════════════════════════════════════════
