@@ -651,7 +651,14 @@ tr:hover td{background:#fdf8f4}
     <h3 id="modal-prod-titulo">Novo Produto</h3>
     <div class="form-group"><label>Nome</label><input id="f-nome" placeholder="Ex: Cappuccino"></div>
     <div class="form-group"><label>Categoria</label>
-      <select id="f-cat"><option>Bebidas Quentes</option><option>Bebidas Frias</option><option>Salgados</option><option>Doces</option><option>Outros</option></select>
+      <select id="f-cat" onchange="verificarNovaCat(this)"></select>
+      <div id="nova-cat-area" style="display:none;margin-top:7px;display:none">
+        <div style="display:flex;gap:6px">
+          <input id="nova-cat-input" placeholder="Nome da nova categoria" style="flex:1;padding:8px 11px;border:1.5px solid var(--caramelo);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.87rem">
+          <button onclick="adicionarCategoria()" style="padding:8px 14px;background:var(--caramelo);color:white;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Criar</button>
+          <button onclick="cancelarNovaCat()" style="padding:8px 10px;background:none;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;color:var(--cinza)">✕</button>
+        </div>
+      </div>
     </div>
     <div class="form-group"><label>Preço (R$)</label><input id="f-preco" type="number" step="0.01" placeholder="0,00"></div>
     <div class="form-group"><label>Estoque</label><input id="f-estoque" type="number" placeholder="0"></div>
@@ -1142,6 +1149,7 @@ function esc(str){
 // DADOS EM MEMÓRIA
 // ═══════════════════════════════════════════════════
 let produtos=[], vendas=[], despesas=[], sangrias=[], funcionarios=[], caixaAtual=null, historicosCaixa=[], pedidosIfood=[];
+let categorias = ['Bebidas Quentes','Bebidas Frias','Salgados','Doces','Outros'];
 let metas={diaria:0, mensal:0};
 let carrinho=[], formaPgto='dinheiro', editandoProdId=null, editandoDespId=null, editandoFuncId=null;
 let filtroAtual='hoje', ultimaVenda=null, descontoAtual=0;
@@ -1174,6 +1182,10 @@ async function carregarDados(){
     historicosCaixa = await dbGet('caixas','aberto=eq.false');
     caixaAtual = await dbGetOne('caixas','aberto=eq.true') || null;
     try { pedidosIfood = await dbGet('pedidos_ifood'); } catch(e){ pedidosIfood = []; }
+    try {
+      const catsCfg = await dbGetConfig('categorias_produtos');
+      if(catsCfg) categorias = JSON.parse(catsCfg);
+    } catch(e){}
 
     const md = await dbGetConfig('meta_diaria');
     const mm = await dbGetConfig('meta_mensal');
@@ -1755,11 +1767,70 @@ function renderEstoque(){
   });
 }
 
+function popularSelectCat(valorAtual=null){
+  const sel = document.getElementById('f-cat');
+  sel.innerHTML = '';
+  categorias.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    if(c === valorAtual) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  const separador = document.createElement('option');
+  separador.disabled = true; separador.textContent = '─────────────';
+  sel.appendChild(separador);
+  const nova = document.createElement('option');
+  nova.value = '__nova__'; nova.textContent = '+ Nova categoria...';
+  sel.appendChild(nova);
+  document.getElementById('nova-cat-area').style.display = 'none';
+}
+
+function verificarNovaCat(sel){
+  const area = document.getElementById('nova-cat-area');
+  if(sel.value === '__nova__'){
+    area.style.display = 'block';
+    document.getElementById('nova-cat-input').focus();
+  } else {
+    area.style.display = 'none';
+  }
+}
+
+function cancelarNovaCat(){
+  document.getElementById('nova-cat-area').style.display = 'none';
+  document.getElementById('nova-cat-input').value = '';
+  document.getElementById('f-cat').selectedIndex = 0;
+}
+
+async function adicionarCategoria(){
+  const nome = document.getElementById('nova-cat-input').value.trim();
+  if(!nome){ toast('Digite o nome da categoria.'); return; }
+  if(categorias.includes(nome)){ toast('Categoria já existe!'); return; }
+  categorias.push(nome);
+  await dbSetConfig('categorias_produtos', JSON.stringify(categorias));
+  popularSelectCat(nome);
+  document.getElementById('nova-cat-input').value = '';
+  document.getElementById('nova-cat-area').style.display = 'none';
+  renderCategoriasPDV();
+  toast('Categoria "' + nome + '" criada!');
+}
+
 function abrirModalProd(id=null){
   editandoProdId=id;
   document.getElementById('modal-prod-titulo').textContent=id?'Editar Produto':'Novo Produto';
-  if(id){const p=produtos.find(x=>x.id===id);document.getElementById('f-nome').value=p.nome;document.getElementById('f-cat').value=p.cat;document.getElementById('f-preco').value=p.preco;document.getElementById('f-estoque').value=p.estoque;document.getElementById('f-alerta').value=p.alerta||5;}
-  else{['f-nome','f-preco','f-estoque'].forEach(i=>document.getElementById(i).value='');document.getElementById('f-alerta').value='5';document.getElementById('f-cat').selectedIndex=0;}
+  if(id){
+    const p=produtos.find(x=>x.id===id);
+    document.getElementById('f-nome').value=p.nome;
+    document.getElementById('f-preco').value=p.preco;
+    document.getElementById('f-estoque').value=p.estoque;
+    document.getElementById('f-alerta').value=p.alerta||5;
+    // Garantir que a categoria do produto existe na lista
+    if(p.cat && !categorias.includes(p.cat)) categorias.push(p.cat);
+    popularSelectCat(p.cat);
+  } else {
+    ['f-nome','f-preco','f-estoque'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('f-alerta').value='5';
+    popularSelectCat();
+  }
   document.getElementById('modal-prod-bg').classList.add('aberto');
 }
 function fecharModalProd(){fecharModal('modal-prod-bg');editandoProdId=null;}
@@ -1778,6 +1849,7 @@ async function salvarProduto(){
   if(!exigirAdmin('gerenciar produtos')) return;
   const nome=document.getElementById('f-nome').value.trim();
   const cat=document.getElementById('f-cat').value;
+  if(cat==='__nova__'||!cat){toast('Selecione ou crie uma categoria.');return;}
   const preco=parseFloat(document.getElementById('f-preco').value);
   const estoque=parseInt(document.getElementById('f-estoque').value);
   const alerta=parseInt(document.getElementById('f-alerta').value)||5;
