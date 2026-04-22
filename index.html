@@ -751,9 +751,10 @@ tr:hover td{background:#fdf8f4}
   <div class="modal modal-nota">
     <h3>Recibo de Compra</h3>
     <div class="nota-preview" id="nota-conteudo"></div>
-    <div class="modal-btns" style="margin-top:12px">
+    <div class="modal-btns" style="margin-top:12px;flex-wrap:wrap;gap:8px">
       <button class="btn-cancelar" onclick="fecharModal('modal-nota-bg')">Fechar</button>
-      <button class="btn-imprimir" onclick="imprimirNota()">Imprimir</button>
+      <button class="btn-imprimir" style="background:#5a6b5e;flex:1;min-width:110px" onclick="baixarNotaTxt()">Baixar TXT</button>
+      <button class="btn-imprimir" style="flex:1;min-width:110px" onclick="imprimirNota()">Imprimir</button>
     </div>
   </div>
 </div>
@@ -2184,46 +2185,52 @@ function imprimirDoSucesso(){
 }
 function imprimirNota(){
   if(!ultimaVenda) return;
-  const texto = gerarTextoNota(ultimaVenda)
+  const textoEsc = gerarTextoNota(ultimaVenda)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  const janela = window.open('', '_blank', 'width=340,height=700,scrollbars=no');
-  if(!janela){ toast('Bloqueador de pop-up ativo. Permita pop-ups para imprimir.'); return; }
+  // Remove iframe anterior se existir
+  const old = document.getElementById('_print_iframe');
+  if(old) old.remove();
 
-  janela.document.write(`<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Recibo</title>
+  const iframe = document.createElement('iframe');
+  iframe.id = '_print_iframe';
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:80mm;height:1px;border:none;opacity:0;pointer-events:none';
+  document.body.appendChild(iframe);
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
-  @page { size: 80mm auto; margin: 4mm 3mm; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 11px;
-    line-height: 1.55;
-    color: #000;
-    background: #fff;
-    width: 74mm;
-  }
-  pre {
-    white-space: pre-wrap;
-    word-break: break-all;
-    font-family: inherit;
-    font-size: inherit;
-  }
-</style>
-</head>
-<body>
-<pre>${texto}</pre>
-<script>
-  window.onload = function(){
-    setTimeout(function(){ window.print(); window.close(); }, 300);
-  };
-<\/script>
-</body>
-</html>`);
-  janela.document.close();
+  @page{size:80mm auto;margin:3mm 2mm}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Courier New',Courier,monospace;font-size:11px;line-height:1.55;color:#000;background:#fff;width:76mm}
+  pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:inherit}
+</style></head><body><pre>${textoEsc}</pre></body></html>`;
+
+  iframe.srcdoc = html;
+  iframe.addEventListener('load', function(){
+    try{
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }catch(e){
+      toast('Erro ao imprimir. Use "Baixar TXT" como alternativa.');
+    }
+    setTimeout(()=>{ if(iframe.parentNode) iframe.remove(); }, 2000);
+  });
+  toast('Abrindo diálogo de impressão…');
+}
+
+function baixarNotaTxt(){
+  if(!ultimaVenda){ toast('Nenhuma venda para baixar!'); return; }
+  const texto = gerarTextoNota(ultimaVenda);
+  const blob = new Blob(['\uFEFF'+texto], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'recibo-' + String(ultimaVenda.id).slice(-6) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+  toast('Recibo baixado! Abra o .txt e imprima na Elgin i8 (Ctrl+P).');
 }
 
 // ═══════════════════════════════════════════════════
