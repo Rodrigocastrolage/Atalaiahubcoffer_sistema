@@ -2196,7 +2196,9 @@ function imprimirNota(){
   if(!ultimaVenda) return;
   const area = document.getElementById('print-area');
   area.innerHTML = '<pre>' + esc(gerarTextoNota(ultimaVenda)) + '</pre>';
-  window.print();
+  // Fecha o modal antes de imprimir para o navegador não bloquear
+  fecharModal('modal-nota-bg');
+  setTimeout(function(){ window.print(); }, 350);
 }
 
 function baixarNotaTxt(){
