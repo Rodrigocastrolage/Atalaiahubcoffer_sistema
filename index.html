@@ -675,7 +675,14 @@ tr:hover td{background:#fdf8f4}
     <h3 id="modal-desp-titulo">Nova Despesa</h3>
     <div class="form-group"><label>Descrição</label><input id="d-nome" placeholder="Ex: Aluguel, Energia..."></div>
     <div class="form-group"><label>Categoria</label>
-      <select id="d-cat"><option>Aluguel</option><option>Energia</option><option>Agua</option><option>Ingredientes</option><option>Funcionarios</option><option>Manutencao</option><option>Outros</option></select>
+      <select id="d-cat" onchange="verificarNovaCatDesp(this)"></select>
+      <div id="nova-cat-desp-area" style="display:none;margin-top:7px">
+        <div style="display:flex;gap:6px">
+          <input id="nova-cat-desp-input" placeholder="Nome da nova categoria" style="flex:1;padding:8px 11px;border:1.5px solid var(--caramelo);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.87rem">
+          <button onclick="adicionarCategoriaDesp()" style="padding:8px 14px;background:var(--caramelo);color:white;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap">Criar</button>
+          <button onclick="cancelarNovaCatDesp()" style="padding:8px 10px;background:none;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;color:var(--cinza)">✕</button>
+        </div>
+      </div>
     </div>
     <div class="form-group"><label>Valor (R$)</label><input id="d-valor" type="number" step="0.01" placeholder="0,00"></div>
     <div class="form-group"><label>Data</label><input id="d-data" type="date"></div>
@@ -1150,6 +1157,7 @@ function esc(str){
 // ═══════════════════════════════════════════════════
 let produtos=[], vendas=[], despesas=[], sangrias=[], funcionarios=[], caixaAtual=null, historicosCaixa=[], pedidosIfood=[];
 let categorias = ['Bebidas Quentes','Bebidas Frias','Salgados','Doces','Outros'];
+let categoriasDesp = ['Aluguel','Energia','Água','Ingredientes','Funcionários','Manutenção','Outros'];
 let metas={diaria:0, mensal:0};
 let carrinho=[], formaPgto='dinheiro', editandoProdId=null, editandoDespId=null, editandoFuncId=null;
 let filtroAtual='hoje', ultimaVenda=null, descontoAtual=0;
@@ -1185,6 +1193,10 @@ async function carregarDados(){
     try {
       const catsCfg = await dbGetConfig('categorias_produtos');
       if(catsCfg) categorias = JSON.parse(catsCfg);
+    } catch(e){}
+    try {
+      const catsDespCfg = await dbGetConfig('categorias_despesas');
+      if(catsDespCfg) categoriasDesp = JSON.parse(catsDespCfg);
     } catch(e){}
 
     const md = await dbGetConfig('meta_diaria');
@@ -1652,11 +1664,68 @@ function renderMeta(){
 // ═══════════════════════════════════════════════════
 // DESPESAS
 // ═══════════════════════════════════════════════════
+function popularSelectCatDesp(valorAtual=null){
+  const sel = document.getElementById('d-cat');
+  sel.innerHTML = '';
+  categoriasDesp.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    if(c === valorAtual) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  const sep = document.createElement('option');
+  sep.disabled = true; sep.textContent = '─────────────';
+  sel.appendChild(sep);
+  const nova = document.createElement('option');
+  nova.value = '__nova__'; nova.textContent = '+ Nova categoria...';
+  sel.appendChild(nova);
+  document.getElementById('nova-cat-desp-area').style.display = 'none';
+}
+
+function verificarNovaCatDesp(sel){
+  const area = document.getElementById('nova-cat-desp-area');
+  if(sel.value === '__nova__'){
+    area.style.display = 'block';
+    document.getElementById('nova-cat-desp-input').focus();
+  } else {
+    area.style.display = 'none';
+  }
+}
+
+function cancelarNovaCatDesp(){
+  document.getElementById('nova-cat-desp-area').style.display = 'none';
+  document.getElementById('nova-cat-desp-input').value = '';
+  document.getElementById('d-cat').selectedIndex = 0;
+}
+
+async function adicionarCategoriaDesp(){
+  const nome = document.getElementById('nova-cat-desp-input').value.trim();
+  if(!nome){ toast('Digite o nome da categoria.'); return; }
+  if(categoriasDesp.includes(nome)){ toast('Categoria já existe!'); return; }
+  categoriasDesp.push(nome);
+  await dbSetConfig('categorias_despesas', JSON.stringify(categoriasDesp));
+  popularSelectCatDesp(nome);
+  document.getElementById('nova-cat-desp-input').value = '';
+  document.getElementById('nova-cat-desp-area').style.display = 'none';
+  toast('Categoria "' + nome + '" criada!');
+}
+
 function abrirModalDesp(id=null){
   editandoDespId=id;
   document.getElementById('modal-desp-titulo').textContent=id?'Editar Despesa':'Nova Despesa';
-  if(id){const d=despesas.find(x=>x.id===id);document.getElementById('d-nome').value=d.nome;document.getElementById('d-cat').value=d.cat;document.getElementById('d-valor').value=d.valor;document.getElementById('d-data').value=d.data;}
-  else{document.getElementById('d-nome').value='';document.getElementById('d-valor').value='';document.getElementById('d-data').value=new Date().toISOString().split('T')[0];document.getElementById('d-cat').selectedIndex=0;}
+  if(id){
+    const d=despesas.find(x=>x.id===id);
+    document.getElementById('d-nome').value=d.nome;
+    document.getElementById('d-valor').value=d.valor;
+    document.getElementById('d-data').value=d.data;
+    if(d.cat && !categoriasDesp.includes(d.cat)) categoriasDesp.push(d.cat);
+    popularSelectCatDesp(d.cat);
+  } else {
+    document.getElementById('d-nome').value='';
+    document.getElementById('d-valor').value='';
+    document.getElementById('d-data').value=new Date().toISOString().split('T')[0];
+    popularSelectCatDesp();
+  }
   document.getElementById('modal-desp-bg').classList.add('aberto');
 }
 function fecharModalDesp(){fecharModal('modal-desp-bg');editandoDespId=null;}
@@ -1664,6 +1733,7 @@ function fecharModalDesp(){fecharModal('modal-desp-bg');editandoDespId=null;}
 async function salvarDespesa(){
   const nome=document.getElementById('d-nome').value.trim();
   const cat=document.getElementById('d-cat').value;
+  if(cat==='__nova__'||!cat){toast('Selecione ou crie uma categoria.');return;}
   const valor=parseFloat(document.getElementById('d-valor').value);
   const data=document.getElementById('d-data').value;
   if(!nome||isNaN(valor)||!data){toast('Preencha todos os campos!');return;}
