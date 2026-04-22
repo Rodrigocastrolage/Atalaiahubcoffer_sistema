@@ -258,6 +258,15 @@ tr:hover td{background:#fdf8f4}
 .modal-nota{width:420px}
 .btn-imprimir{flex:1;background:var(--espresso);color:white;border:none;border-radius:9px;padding:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
 
+/* IMPRESSÃO TÉRMICA */
+#print-area{display:none}
+@media print{
+  body>*{display:none!important}
+  #print-area{display:block!important;position:fixed;top:0;left:0;width:80mm}
+  #print-area pre{font-family:'Courier New',Courier,monospace;font-size:11px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:#000}
+  @page{size:80mm auto;margin:3mm 2mm}
+}
+
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--espresso);color:var(--creme);padding:10px 18px;border-radius:9px;font-size:.83rem;font-weight:500;z-index:9999;transform:translateY(60px);opacity:0;transition:.3s;pointer-events:none}
 .toast.show{transform:translateY(0);opacity:1}
@@ -2185,37 +2194,9 @@ function imprimirDoSucesso(){
 }
 function imprimirNota(){
   if(!ultimaVenda) return;
-  const textoEsc = gerarTextoNota(ultimaVenda)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  // Remove iframe anterior se existir
-  const old = document.getElementById('_print_iframe');
-  if(old) old.remove();
-
-  const iframe = document.createElement('iframe');
-  iframe.id = '_print_iframe';
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:80mm;height:1px;border:none;opacity:0;pointer-events:none';
-  document.body.appendChild(iframe);
-
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<style>
-  @page{size:80mm auto;margin:3mm 2mm}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Courier New',Courier,monospace;font-size:11px;line-height:1.55;color:#000;background:#fff;width:76mm}
-  pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:inherit}
-</style></head><body><pre>${textoEsc}</pre></body></html>`;
-
-  iframe.srcdoc = html;
-  iframe.addEventListener('load', function(){
-    try{
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-    }catch(e){
-      toast('Erro ao imprimir. Use "Baixar TXT" como alternativa.');
-    }
-    setTimeout(()=>{ if(iframe.parentNode) iframe.remove(); }, 2000);
-  });
-  toast('Abrindo diálogo de impressão…');
+  const area = document.getElementById('print-area');
+  area.innerHTML = '<pre>' + esc(gerarTextoNota(ultimaVenda)) + '</pre>';
+  window.print();
 }
 
 function baixarNotaTxt(){
@@ -2626,5 +2607,6 @@ function toast(msg){
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
 });
 </script>
+<div id="print-area"></div>
 </body>
 </html>
