@@ -30,6 +30,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--espres
 .cat-btn .cat-qtd{display:inline-block;background:rgba(255,255,255,.25);border-radius:10px;padding:0 6px;font-size:.7rem;margin-left:4px}
 .cat-btn:not(.ativo) .cat-qtd{background:var(--creme);color:var(--cinza)}
 
+/* TROCA */
+.troca-vendas-lista{max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.troca-venda-item{padding:9px 12px;border:1.5px solid #eee;border-radius:9px;cursor:pointer;font-size:.83rem;transition:.2s}
+.troca-venda-item:hover{border-color:var(--caramelo)}
+.troca-venda-item.selecionado{border-color:var(--espresso);background:var(--creme)}
+.troca-venda-item .tv-header{font-weight:600;color:var(--espresso)}
+.troca-venda-item .tv-itens{color:var(--cinza);font-size:.77rem;margin-top:2px}
+.troca-secao-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza);margin-bottom:7px}
+.troca-item-orig{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1.5px solid #eee;border-radius:8px;cursor:pointer;margin-bottom:6px;transition:.2s;font-size:.84rem}
+.troca-item-orig:hover{border-color:var(--caramelo)}
+.troca-item-orig.selecionado{border-color:var(--espresso);background:var(--creme)}
+.troca-item-orig input[type=radio]{accent-color:var(--espresso);width:15px;height:15px;flex-shrink:0}
+.troca-prods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;max-height:160px;overflow-y:auto}
+.troca-prod-card{padding:9px 7px;border:1.5px solid #eee;border-radius:8px;cursor:pointer;text-align:center;font-size:.78rem;transition:.2s}
+.troca-prod-card:hover{border-color:var(--caramelo)}
+.troca-prod-card.selecionado{border-color:var(--espresso);background:var(--creme)}
+.troca-prod-card .tp-nome{font-weight:600;line-height:1.3}
+.troca-prod-card .tp-preco{color:var(--caramelo);font-weight:700;margin-top:3px}
+.troca-diff{background:var(--creme);border-radius:9px;padding:12px 14px;margin-top:12px;border:1.5px solid #e8d8c0}
+.troca-diff .td-linha{display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem;color:var(--cinza)}
+.troca-diff .td-total{display:flex;justify-content:space-between;font-weight:700;font-size:.91rem;border-top:1px solid #ddd;padding-top:8px;margin-top:6px}
+.troca-diff .positivo{color:var(--verde)}
+.troca-diff .negativo{color:var(--vermelho)}
+
+/* BUSCA PDV */
+.pdv-busca{position:relative;margin-bottom:14px}
+.pdv-busca input{width:100%;padding:9px 36px 9px 14px;border:1.5px solid #ddd;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--espresso);background:white;transition:.2s}
+.pdv-busca input:focus{border-color:var(--caramelo);outline:none;box-shadow:0 0 0 3px rgba(232,192,125,.15)}
+.pdv-busca-limpar{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--cinza);cursor:pointer;font-size:.95rem;padding:2px 5px;border-radius:4px;transition:.2s}
+.pdv-busca-limpar:hover{color:var(--vermelho)}
+
 /* TOPBAR */
 .topbar{background:var(--espresso);color:var(--creme);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.3)}
 .topbar-logo{font-family:'Playfair Display',serif;font-size:1.25rem}
@@ -379,7 +410,10 @@ tr:hover td{background:#fdf8f4}
 
 <!-- PDV -->
 <div class="tela ativa" id="tela-pdv">
-  <div class="sec-header"><h2>Ponto de Venda</h2><p>Clique nos produtos para adicionar ao pedido</p></div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+    <div><h2>Ponto de Venda</h2><p>Clique nos produtos para adicionar ao pedido</p></div>
+    <button class="btn-add" style="background:#5a6b5e;margin-top:4px" onclick="abrirModalTroca()">↩ Trocar Produto</button>
+  </div>
   <div id="alerta-estoque" class="alerta-estoque"></div>
   <div class="resumo-grid">
     <div class="resumo-card"><label>Vendas Hoje</label><div class="valor" id="r-vendas-hoje">R$ 0,00</div><div class="sub" id="r-qtd-hoje">0 pedidos</div></div>
@@ -388,6 +422,10 @@ tr:hover td{background:#fdf8f4}
     <div class="resumo-card vermelho"><label>Estoque Crítico</label><div class="valor" id="r-critico">0</div><div class="sub">itens em falta</div></div>
   </div>
   <div class="pdv-categorias" id="pdv-categorias"></div>
+  <div class="pdv-busca">
+    <input type="text" id="pdv-busca-input" placeholder="🔍 Buscar produto..." oninput="filtrarBuscaPDV(this.value)">
+    <button class="pdv-busca-limpar" id="pdv-busca-limpar" onclick="limparBuscaPDV()" style="display:none">✕</button>
+  </div>
   <div class="pdv-grid">
     <div><div class="produtos-grid" id="grade-produtos"></div></div>
     <div class="carrinho-box">
@@ -828,6 +866,39 @@ tr:hover td{background:#fdf8f4}
     <div class="modal-btns">
       <button class="btn-cancelar" onclick="fecharModal('modal-ifood-bg')">Cancelar</button>
       <button class="btn-salvar" onclick="salvarPedidoIfood()" style="background:#ea1d2c">Salvar Pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TROCA -->
+<div class="modal-bg" id="modal-troca-bg">
+  <div class="modal" style="max-width:520px;width:100%">
+    <h3>↩ Registrar Troca</h3>
+
+    <div id="troca-step1">
+      <div class="form-group">
+        <label>Selecione a venda original (hoje)</label>
+        <div class="troca-vendas-lista" id="troca-vendas-lista"></div>
+      </div>
+    </div>
+
+    <div id="troca-step2" style="display:none">
+      <div style="margin-bottom:12px">
+        <div class="troca-secao-label">1. Qual item será devolvido?</div>
+        <div id="troca-itens-original"></div>
+      </div>
+      <div>
+        <div class="troca-secao-label">2. Qual produto o cliente quer receber?</div>
+        <input type="text" id="troca-busca-prod" placeholder="Buscar produto..." oninput="filtrarTrocaProd(this.value)"
+          style="width:100%;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.86rem;margin-bottom:8px;box-sizing:border-box">
+        <div class="troca-prods-grid" id="troca-prods-grid"></div>
+      </div>
+      <div class="troca-diff" id="troca-diff" style="display:none"></div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn-cancelar" onclick="fecharModal('modal-troca-bg')">Cancelar</button>
+      <button class="btn-salvar" id="btn-confirmar-troca" onclick="confirmarTroca()" style="display:none;background:var(--espresso)">Confirmar Troca</button>
     </div>
   </div>
 </div>
@@ -1327,6 +1398,19 @@ function verificarAlertas(){
 // PDV
 // ═══════════════════════════════════════════════════
 let filtroCatPDV = 'Todos';
+let filtroBuscaPDV = '';
+
+function filtrarBuscaPDV(val){
+  filtroBuscaPDV = val.trim().toLowerCase();
+  document.getElementById('pdv-busca-limpar').style.display = filtroBuscaPDV ? 'block' : 'none';
+  renderProdutos();
+}
+function limparBuscaPDV(){
+  filtroBuscaPDV = '';
+  document.getElementById('pdv-busca-input').value = '';
+  document.getElementById('pdv-busca-limpar').style.display = 'none';
+  renderProdutos();
+}
 
 const ICONE_CAT = {
   'Todos':          'Todos',
@@ -1355,9 +1439,10 @@ function renderCategoriasPDV(){
 
 function renderProdutos(){
   const g=document.getElementById('grade-produtos');g.innerHTML='';
-  const lista = filtroCatPDV === 'Todos' ? produtos : produtos.filter(p => p.cat === filtroCatPDV);
+  let lista = filtroCatPDV === 'Todos' ? produtos : produtos.filter(p => p.cat === filtroCatPDV);
+  if(filtroBuscaPDV) lista = lista.filter(p => p.nome.toLowerCase().includes(filtroBuscaPDV));
   if(lista.length === 0){
-    g.innerHTML = '<div style="color:var(--cinza);font-size:.85rem;padding:20px">Nenhum produto nesta categoria.</div>';
+    g.innerHTML = '<div style="color:var(--cinza);font-size:.85rem;padding:20px">Nenhum produto encontrado.</div>';
     return;
   }
   lista.forEach(p=>{
@@ -1488,10 +1573,13 @@ async function finalizarVenda(){
   const subtotal=carrinho.reduce((s,i)=>s+i.preco*i.qtd,0);
   const total=Math.max(0,subtotal-descontoAtual);
   const itens=carrinho.map(i=>({id:i.id,nome:i.nome,qtd:i.qtd,preco:i.preco}));
-  // Debitar estoque
+  // Debitar estoque no banco e localmente
   for(const item of itens){
     const p=produtos.find(x=>x.id===item.id);
-    if(p){ await dbUpdate('produtos', p.id, {estoque: p.estoque - item.qtd}); }
+    if(p){
+      await dbUpdate('produtos', p.id, {estoque: p.estoque - item.qtd});
+      p.estoque -= item.qtd;
+    }
   }
   const venda = await dbInsert('vendas',{
     subtotal, desconto: descontoAtual, total, itens,
@@ -1518,12 +1606,15 @@ async function finalizarVenda(){
     toast('Erro ao salvar venda!'); return;
   }
   document.getElementById('desc-valor').value='';
+  document.getElementById('desconto-val').textContent='';
   document.getElementById('valor-recebido').value='';
   document.getElementById('troco-resultado').textContent='';
   descontoAtual=0;
   carrinho=[];
-  await carregarDados();
+  // Atualiza UI imediatamente com estado local já corrigido
   renderCarrinho(); renderCategoriasPDV(); renderProdutos(); atualizarResumo(); verificarAlertas();
+  // Sincroniza com Supabase em background sem bloquear a tela
+  carregarDados().then(()=>{ renderCategoriasPDV(); renderProdutos(); atualizarResumo(); verificarAlertas(); }).catch(()=>{});
 }
 
 function atualizarResumo(){
@@ -2208,7 +2299,7 @@ function imprimirNota(){
     document.body.innerHTML = savedBody;
     document.title = savedTitle;
     window.scrollTo(0, savedScroll);
-    ['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg'].forEach(id=>{
+    ['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg','modal-troca-bg'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
     });
@@ -2233,6 +2324,181 @@ function baixarNotaTxt(){
   document.body.removeChild(a);
   setTimeout(()=> URL.revokeObjectURL(url), 1000);
   toast('Recibo baixado! Abra o .txt e imprima na Elgin i8 (Ctrl+P).');
+}
+
+// ═══════════════════════════════════════════════════
+// TROCA DE PRODUTOS
+// ═══════════════════════════════════════════════════
+let trocaVendaOriginal = null;
+let trocaItemSelecionado = null;
+let trocaNovoProduto = null;
+let trocaFormaPgto = 'dinheiro';
+
+function abrirModalTroca(){
+  trocaVendaOriginal = null;
+  trocaItemSelecionado = null;
+  trocaNovoProduto = null;
+  trocaFormaPgto = 'dinheiro';
+  document.getElementById('troca-step1').style.display = 'block';
+  document.getElementById('troca-step2').style.display = 'none';
+  document.getElementById('btn-confirmar-troca').style.display = 'none';
+  document.getElementById('troca-diff').style.display = 'none';
+  renderTrocaVendas();
+  document.getElementById('modal-troca-bg').classList.add('aberto');
+}
+
+function renderTrocaVendas(){
+  const hoje = new Date().toDateString();
+  const lista = [...vendas]
+    .filter(v => new Date(v.data).toDateString() === hoje && v.pgto !== 'troca')
+    .sort((a,b) => new Date(b.data) - new Date(a.data))
+    .slice(0, 25);
+  const el = document.getElementById('troca-vendas-lista');
+  if(lista.length === 0){
+    el.innerHTML = '<div style="color:var(--cinza);font-size:.82rem;padding:10px 0">Nenhuma venda registrada hoje.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  lista.forEach(v => {
+    const hora = new Date(v.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const itensStr = v.itens.map(i => `${i.qtd}x ${i.nome}`).join(', ');
+    const div = document.createElement('div');
+    div.className = 'troca-venda-item';
+    div.innerHTML = `<div class="tv-header">#${v.id} — ${hora} — R$ ${Number(v.total).toFixed(2).replace('.',',')}</div><div class="tv-itens">${esc(itensStr)}</div>`;
+    div.onclick = () => selecionarVendaTroca(v, div);
+    el.appendChild(div);
+  });
+}
+
+function selecionarVendaTroca(venda, el){
+  document.querySelectorAll('.troca-venda-item').forEach(e => e.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+  trocaVendaOriginal = venda;
+  trocaItemSelecionado = null;
+  trocaNovoProduto = null;
+  document.getElementById('troca-step2').style.display = 'block';
+  document.getElementById('btn-confirmar-troca').style.display = 'none';
+  document.getElementById('troca-diff').style.display = 'none';
+  document.getElementById('troca-busca-prod').value = '';
+  renderTrocaItensOriginais();
+  renderTrocaProds('');
+}
+
+function renderTrocaItensOriginais(){
+  const el = document.getElementById('troca-itens-original');
+  el.innerHTML = '';
+  trocaVendaOriginal.itens.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'troca-item-orig';
+    div.innerHTML = `<input type="radio" name="troca-item"><span style="flex:1">${esc(item.nome)} <span style="color:var(--cinza)">x${item.qtd}</span></span><span style="font-weight:700">R$ ${(item.preco * item.qtd).toFixed(2).replace('.',',')}</span>`;
+    div.onclick = () => {
+      div.querySelector('input').checked = true;
+      trocaItemSelecionado = item;
+      document.querySelectorAll('.troca-item-orig').forEach(e => e.classList.remove('selecionado'));
+      div.classList.add('selecionado');
+      atualizarDiffTroca();
+    };
+    el.appendChild(div);
+  });
+}
+
+function renderTrocaProds(busca){
+  const el = document.getElementById('troca-prods-grid');
+  el.innerHTML = '';
+  let lista = produtos.filter(p => p.estoque > 0);
+  if(busca) lista = lista.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()));
+  if(lista.length === 0){
+    el.innerHTML = '<div style="color:var(--cinza);font-size:.8rem;padding:8px 0">Nenhum produto encontrado.</div>';
+    return;
+  }
+  lista.slice(0, 30).forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'troca-prod-card' + (trocaNovoProduto && trocaNovoProduto.id === p.id ? ' selecionado' : '');
+    div.innerHTML = `<div class="tp-nome">${esc(p.nome)}</div><div class="tp-preco">R$ ${p.preco.toFixed(2).replace('.',',')}</div>`;
+    div.onclick = () => {
+      trocaNovoProduto = p;
+      document.querySelectorAll('.troca-prod-card').forEach(e => e.classList.remove('selecionado'));
+      div.classList.add('selecionado');
+      atualizarDiffTroca();
+    };
+    el.appendChild(div);
+  });
+}
+
+function filtrarTrocaProd(val){ renderTrocaProds(val); }
+
+function selecionarTrocaPgto(pgto, btn){
+  trocaFormaPgto = pgto;
+  btn.closest('div').querySelectorAll('.pgto-btn').forEach(b => b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+}
+
+function atualizarDiffTroca(){
+  const diffEl = document.getElementById('troca-diff');
+  const btnConfirmar = document.getElementById('btn-confirmar-troca');
+  if(!trocaItemSelecionado || !trocaNovoProduto){
+    diffEl.style.display = 'none';
+    btnConfirmar.style.display = 'none';
+    return;
+  }
+  const valDev = trocaItemSelecionado.preco * trocaItemSelecionado.qtd;
+  const valNovo = trocaNovoProduto.preco;
+  const diff = valNovo - valDev;
+  let diffHtml;
+  if(diff > 0)      diffHtml = `<div class="td-total"><span>Cliente paga a mais:</span><span class="negativo">R$ ${diff.toFixed(2).replace('.',',')}</span></div>`;
+  else if(diff < 0) diffHtml = `<div class="td-total"><span>Reembolso ao cliente:</span><span class="positivo">R$ ${Math.abs(diff).toFixed(2).replace('.',',')}</span></div>`;
+  else              diffHtml = `<div class="td-total"><span>Troca de mesmo valor</span><span class="positivo">✓</span></div>`;
+
+  const pgtos = ['dinheiro','cartao','pix'];
+  const pgtoLabels = {dinheiro:'Dinheiro', cartao:'Cartão', pix:'Pix'};
+  const pgtoHtml = `<div style="margin-top:10px">
+    <div class="troca-secao-label" style="margin-bottom:6px">Forma de pagamento</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
+      ${pgtos.map(p=>`<button class="pgto-btn${trocaFormaPgto===p?' ativo':''}" onclick="selecionarTrocaPgto('${p}',this)">${pgtoLabels[p]}</button>`).join('')}
+    </div>
+  </div>`;
+
+  diffEl.innerHTML =
+    `<div class="td-linha"><span>Devolvendo:</span><span>${esc(trocaItemSelecionado.nome)} x${trocaItemSelecionado.qtd} — R$ ${valDev.toFixed(2).replace('.',',')}</span></div>`+
+    `<div class="td-linha"><span>Recebendo:</span><span>${esc(trocaNovoProduto.nome)} x1 — R$ ${valNovo.toFixed(2).replace('.',',')}</span></div>`+
+    diffHtml + pgtoHtml;
+  diffEl.style.display = 'block';
+  btnConfirmar.style.display = 'inline-block';
+}
+
+async function confirmarTroca(){
+  if(!trocaVendaOriginal || !trocaItemSelecionado || !trocaNovoProduto) return;
+  mostrarLoading('Processando troca...');
+
+  // Devolver item original ao estoque
+  const prodOriginal = produtos.find(p => p.id === trocaItemSelecionado.id);
+  if(prodOriginal){
+    const novoEst = prodOriginal.estoque + trocaItemSelecionado.qtd;
+    await dbUpdate('produtos', prodOriginal.id, {estoque: novoEst});
+    prodOriginal.estoque = novoEst;
+  }
+
+  // Debitar novo produto do estoque
+  const novoEst = Math.max(0, trocaNovoProduto.estoque - 1);
+  await dbUpdate('produtos', trocaNovoProduto.id, {estoque: novoEst});
+  trocaNovoProduto.estoque = novoEst;
+
+  // Registrar troca como venda especial (não conta no faturamento)
+  await dbInsert('vendas',{
+    subtotal: trocaNovoProduto.preco,
+    desconto: 0,
+    total: 0,
+    itens: [{id: trocaNovoProduto.id, nome: trocaNovoProduto.nome, qtd: 1, preco: trocaNovoProduto.preco}],
+    pgto: trocaFormaPgto,
+    operador: usuarioLogado ? usuarioLogado.nome : '-',
+    data: new Date().toISOString()
+  });
+
+  esconderLoading();
+  fecharModal('modal-troca-bg');
+  renderCategoriasPDV(); renderProdutos(); atualizarResumo(); verificarAlertas();
+  toast(`Troca realizada: ${trocaItemSelecionado.nome} → ${trocaNovoProduto.nome}`);
+  carregarDados().then(()=>{ renderCategoriasPDV(); renderProdutos(); atualizarResumo(); }).catch(()=>{});
 }
 
 // ═══════════════════════════════════════════════════
@@ -2624,7 +2890,7 @@ function toast(msg){
 }
 
 // Fechar modais ao clicar fora
-['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg'].forEach(id=>{
+['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg','modal-troca-bg'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
 });
 </script>
