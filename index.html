@@ -294,6 +294,35 @@ tr:hover td{background:#fdf8f4}
 .toast.show{transform:translateY(0);opacity:1}
 
 #nota-print{display:none}
+
+/* COWORKING */
+.cw-resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin-bottom:22px}
+.cw-presentes{background:white;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--sombra);margin-bottom:20px}
+.cw-presentes h3{font-family:'Playfair Display',serif;font-size:.98rem;color:var(--cafe);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.cw-presente-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border:1.5px solid #e8d8c0;border-radius:9px;margin-bottom:8px;background:#fdfaf7}
+.cw-presente-nome{flex:1;font-weight:600;font-size:.87rem}
+.cw-presente-tempo{font-size:.78rem;color:var(--cinza)}
+.cw-presente-badge{padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700;background:#e6f4ec;color:var(--verde)}
+.cw-presente-badge.diario{background:#fff4e0;color:#8a6000}
+.btn-checkout{background:var(--vermelho);color:white;border:none;border-radius:7px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s}
+.btn-checkout:hover{background:#933232}
+.cw-vazio{text-align:center;color:var(--cinza);padding:20px;font-size:.83rem}
+.cw-tabela-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:9px}
+.cw-plano-badge{padding:3px 9px;border-radius:20px;font-size:.72rem;font-weight:700}
+.cw-plano-badge.mensal{background:#e8f0fe;color:#1a5fcc}
+.cw-plano-badge.diario{background:#fff4e0;color:#8a6000}
+.cw-plano-badge.fixo{background:#ede8fe;color:#5b21b6}
+.cw-plano-badge.hora{background:#e6f4ec;color:var(--verde)}
+.cw-horas-bar{margin-top:4px}
+.cw-horas-track{background:#f0e8e0;border-radius:6px;height:6px;overflow:hidden;margin-top:3px}
+.cw-horas-fill{background:linear-gradient(90deg,var(--caramelo),var(--verde));height:100%;border-radius:6px;transition:width .4s}
+.cw-horas-fill.critico{background:var(--vermelho)}
+.cw-hist-item{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-bottom:1px solid #f5ede3;font-size:.82rem}
+.cw-hist-item:last-child{border-bottom:none}
+.cw-hist-data{color:var(--cinza);font-size:.76rem}
+.cw-hist-horas{font-weight:700;color:var(--cafe)}
+.modal-coworking .modal{max-width:480px}
+
 @media(max-width:860px){.pdv-grid,.caixa-grid,.rel-grid,.backup-grid{grid-template-columns:1fr}.topbar-nav{gap:2px}.nav-btn{padding:5px 7px;font-size:.72rem}}
 
 /* ── MOBILE ─────────────────────────────────────────── */
@@ -397,6 +426,7 @@ tr:hover td{background:#fdf8f4}
     <button class="nav-btn" onclick="ir('estoque',this)">Estoque</button>
     <button class="nav-btn" onclick="ir('funcionarios',this)">Funcionários</button>
     <button class="nav-btn" onclick="ir('relatorios',this)">Relatórios</button>
+    <button class="nav-btn" onclick="ir('coworking',this)">Coworking</button>
     <button class="nav-btn" onclick="ir('ifood',this)">iFood</button>
     <button class="nav-btn" onclick="ir('backup',this)">Backup</button>
   </nav>
@@ -679,6 +709,99 @@ tr:hover td{background:#fdf8f4}
     <h3 style="color:var(--vermelho)">Limpar Todos os Dados</h3>
     <p style="font-size:.82rem;color:var(--cinza);margin-bottom:14px">Remove todas as vendas, despesas, sangrias e fecha o caixa. Produtos e funcionarios sao mantidos. Use para limpar dados de teste.</p>
     <button onclick="limparDadosTeste()" style="background:var(--vermelho);color:white;width:100%;padding:11px;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;font-size:.88rem">Limpar Dados de Teste</button>
+  </div>
+</div>
+
+<!-- COWORKING -->
+<div class="tela" id="tela-coworking">
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <h2>Coworking</h2>
+      <p>Controle de clientes, planos e horas</p>
+    </div>
+    <button class="btn-add" onclick="abrirModalCliente()">+ Novo Cliente</button>
+  </div>
+
+  <div class="cw-resumo" id="cw-resumo-cards"></div>
+
+  <div class="cw-presentes">
+    <h3>
+      <span>Presentes agora</span>
+      <span id="cw-contador-presentes" style="font-size:.82rem;color:var(--cinza);font-weight:400"></span>
+    </h3>
+    <div id="cw-lista-presentes"><div class="cw-vazio">Nenhum cliente no espaço agora.</div></div>
+  </div>
+
+  <div style="background:white;border-radius:var(--radius);box-shadow:var(--sombra);padding:18px 20px">
+    <div class="cw-tabela-header">
+      <h3 style="font-family:'Playfair Display',serif;font-size:.98rem;color:var(--cafe)">Todos os Clientes</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="cw-busca" type="text" placeholder="Buscar cliente..." oninput="renderClientes()" style="padding:7px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.84rem;width:180px">
+        <select id="cw-filtro-plano" onchange="renderClientes()" style="padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.83rem">
+          <option value="">Todos os planos</option>
+          <option value="diario">Diário</option>
+          <option value="mensal">Mensal</option>
+          <option value="fixo">Fixo</option>
+          <option value="hora">Por Hora</option>
+        </select>
+      </div>
+    </div>
+    <div id="cw-tabela-clientes"></div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-bg modal-coworking" id="modal-cliente-bg" onclick="if(event.target===this)fecharModalCliente()">
+  <div class="modal">
+    <h3 id="modal-cliente-titulo">Novo Cliente</h3>
+    <div class="form-group"><label>Nome completo</label><input id="cw-f-nome" placeholder="Ex: João Silva"></div>
+    <div class="form-group"><label>Telefone</label><input id="cw-f-tel" placeholder="(11) 99999-9999" type="tel"></div>
+    <div class="form-group"><label>E-mail</label><input id="cw-f-email" placeholder="joao@email.com" type="email"></div>
+    <div class="form-group">
+      <label>Tipo de Plano</label>
+      <select id="cw-f-plano" onchange="toggleCwHoras()">
+        <option value="diario">Diário</option>
+        <option value="mensal">Mensal</option>
+        <option value="fixo">Fixo</option>
+        <option value="hora">Por Hora</option>
+      </select>
+    </div>
+    <div class="form-group" id="cw-grupo-valor" style="display:none">
+      <label id="cw-label-valor">Valor (R$)</label>
+      <input id="cw-f-valor-dia" type="number" min="0" step="0.01" placeholder="Ex: 35.00">
+    </div>
+    <div class="form-group" id="cw-grupo-horas" style="display:none">
+      <label>Valor por hora (R$)</label>
+      <input id="cw-f-horas" type="number" min="0" step="0.01" placeholder="Ex: 15.00">
+    </div>
+    <div style="display:flex;gap:9px;margin-top:6px">
+      <button class="btn-venda escuro" onclick="salvarCliente()">Salvar</button>
+      <button class="btn-limpar" onclick="fecharModalCliente()">Cancelar</button>
+    </div>
+    <input type="hidden" id="cw-f-id">
+  </div>
+</div>
+
+<!-- MODAL HISTÓRICO CLIENTE -->
+<div class="modal-bg modal-coworking" id="modal-hist-bg" onclick="if(event.target===this)fecharModalHist()">
+  <div class="modal" style="max-width:520px">
+    <h3 id="modal-hist-titulo">Histórico</h3>
+    <div id="modal-hist-conteudo"></div>
+    <button class="btn-limpar" style="margin-top:12px" onclick="fecharModalHist()">Fechar</button>
+  </div>
+</div>
+
+<!-- MODAL CHECK-IN DIÁRIO -->
+<div class="modal-bg modal-coworking" id="modal-checkin-bg" onclick="if(event.target===this)fecharModalCheckin()">
+  <div class="modal" style="max-width:380px">
+    <h3>Check-in Diário</h3>
+    <p id="modal-checkin-nome" style="font-weight:700;color:var(--cafe);margin-bottom:14px"></p>
+    <div class="form-group"><label>Valor cobrado hoje (R$)</label><input id="cw-ci-valor" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div style="display:flex;gap:9px;margin-top:6px">
+      <button class="btn-venda" onclick="confirmarCheckinDiario()">Confirmar Check-in</button>
+      <button class="btn-limpar" onclick="fecharModalCheckin()">Cancelar</button>
+    </div>
+    <input type="hidden" id="cw-ci-cliente-id">
   </div>
 </div>
 
@@ -1133,7 +1256,6 @@ async function fazerLogin(){
     }
     // Guardar token para requisições autenticadas
     HEADERS['Authorization'] = 'Bearer ' + data.access_token;
-    iniciarRefreshToken(data.refresh_token);
     // Determinar role: prioridade user_metadata → lista de admins no banco → fallback 'caixa'
     let roleDetectado = data.user.user_metadata?.role || null;
     if(!roleDetectado){
@@ -1148,6 +1270,8 @@ async function fazerLogin(){
       nome: data.user.user_metadata?.nome || data.user.email.split('@')[0],
       role: roleDetectado
     };
+    salvarSessaoLocal(data.access_token, data.refresh_token, usuarioLogado);
+    iniciarRefreshToken(data.refresh_token);
     document.getElementById('tela-login').style.display = 'none';
     document.getElementById('topbar-usuario').textContent = usuarioLogado.nome;
     document.getElementById('cx-operador').value = usuarioLogado.nome;
@@ -1182,6 +1306,7 @@ function iniciarRefreshToken(refreshToken){
       const data = await r.json();
       HEADERS['Authorization'] = 'Bearer ' + data.access_token;
       _refreshToken = data.refresh_token || _refreshToken;
+      if(usuarioLogado) salvarSessaoLocal(data.access_token, _refreshToken, usuarioLogado);
     } catch(e){ console.warn('Erro ao renovar token:', e.message); }
   }, 50 * 60 * 1000);
 }
@@ -1191,16 +1316,59 @@ function pararRefreshToken(){
   _refreshToken = null;
 }
 
+// ─── Persistência de sessão (1 dia) ───────────────────
+const SESSAO_KEY = 'cafe_sessao_v1';
+const SESSAO_TTL = 24 * 60 * 60 * 1000; // 24h em ms
+
+function salvarSessaoLocal(accessToken, refreshToken, usuario){
+  localStorage.setItem(SESSAO_KEY, JSON.stringify({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    usuario,
+    salvo_em: Date.now()
+  }));
+}
+
+function limparSessaoLocal(){ localStorage.removeItem(SESSAO_KEY); }
+
+async function tentarRestaurarSessao(){
+  try {
+    const raw = localStorage.getItem(SESSAO_KEY);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(Date.now() - s.salvo_em > SESSAO_TTL){ limparSessaoLocal(); return false; }
+    // Renova o token antes de continuar
+    const r = await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: s.refresh_token })
+    });
+    if(!r.ok){ limparSessaoLocal(); return false; }
+    const data = await r.json();
+    if(!data.access_token){ limparSessaoLocal(); return false; }
+    HEADERS['Authorization'] = 'Bearer ' + data.access_token;
+    const novoRefresh = data.refresh_token || s.refresh_token;
+    salvarSessaoLocal(data.access_token, novoRefresh, s.usuario);
+    iniciarRefreshToken(novoRefresh);
+    usuarioLogado = s.usuario;
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('topbar-usuario').textContent = usuarioLogado.nome;
+    document.getElementById('cx-operador').value = usuarioLogado.nome;
+    aplicarPermissoes();
+    iniciarSistema();
+    return true;
+  } catch(e){ limparSessaoLocal(); return false; }
+}
+
 async function sair(){
   if(!confirm('Deseja sair?'))return;
-  // Revogar sessao no Supabase
   await fetch(SUPA_URL+'/auth/v1/logout', {
     method: 'POST',
     headers: { 'apikey': SUPA_KEY, 'Authorization': HEADERS['Authorization'] }
   }).catch(()=>{});
-  // Restaurar header padrao (anon)
   HEADERS['Authorization'] = 'Bearer ' + SUPA_KEY;
   pararRefreshToken();
+  limparSessaoLocal();
   usuarioLogado = null;
   document.getElementById('tela-login').style.display = 'flex';
   document.getElementById('login-usuario').value = '';
@@ -1209,6 +1377,9 @@ async function sair(){
 }
 
 document.getElementById('login-senha').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});
+
+// Tenta restaurar sessão ao carregar a página
+tentarRestaurarSessao();
 
 // ═══════════════════════════════════════════════════
 // SEGURANÇA — SANITIZAÇÃO XSS
@@ -1345,6 +1516,7 @@ async function ir(tela,btn){
   if(tela==='funcionarios')renderFuncionarios();
   if(tela==='ifood')renderIfood();
   if(tela==='backup')renderBackupInfo();
+  if(tela==='coworking')renderCoworking();
 }
 
 // ═══════════════════════════════════════════════════
@@ -2893,6 +3065,274 @@ function toast(msg){
 ['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg','modal-troca-bg'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
 });
+
+// ═══════════════════════════════════════════════════
+// COWORKING
+// ═══════════════════════════════════════════════════
+function cwCarregarClientes(){ try{ return JSON.parse(localStorage.getItem('cafe_clientes')||'[]'); }catch(e){ return []; } }
+function cwSalvarClientes(arr){ localStorage.setItem('cafe_clientes', JSON.stringify(arr)); }
+function cwCarregarSessoes(){ try{ return JSON.parse(localStorage.getItem('cafe_sessoes_cw')||'[]'); }catch(e){ return []; } }
+function cwSalvarSessoes(arr){ localStorage.setItem('cafe_sessoes_cw', JSON.stringify(arr)); }
+
+function cwMesAtual(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0'); }
+function cwHojeStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); }
+function cwFormatHora(iso){ if(!iso) return '--'; const d=new Date(iso); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
+function cwDuracao(entrada){ const ms=Date.now()-new Date(entrada).getTime(); const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); return h>0?`${h}h ${m}min`:`${m}min`; }
+function cwHorasDecimal(entrada,saida){ return Math.round(((new Date(saida)-new Date(entrada))/3600000)*100)/100; }
+
+function cwHorasUsadasMes(clienteId){
+  const mes = cwMesAtual();
+  const sessoes = cwCarregarSessoes();
+  return sessoes.filter(s=>s.cliente_id===clienteId && s.data && s.data.startsWith(mes) && s.saida).reduce((acc,s)=>acc+(s.horas||0),0);
+}
+
+function renderCoworking(){
+  const clientes = cwCarregarClientes();
+  const sessoes = cwCarregarSessoes();
+  const presentes = sessoes.filter(s=>!s.saida);
+
+  // Cards resumo
+  const hojeStr = cwHojeStr();
+  const hoje = sessoes.filter(s=>s.data===hojeStr);
+  const mensais = clientes.filter(c=>c.plano==='mensal' && c.ativo!==false);
+  const diarios = clientes.filter(c=>c.plano==='diario' && c.ativo!==false);
+  document.getElementById('cw-resumo-cards').innerHTML = `
+    <div class="resumo-card"><label>Total Clientes</label><div class="valor">${clientes.filter(c=>c.ativo!==false).length}</div></div>
+    <div class="resumo-card verde"><label>Presentes agora</label><div class="valor">${presentes.length}</div></div>
+    <div class="resumo-card amarelo"><label>Plano Mensal</label><div class="valor">${mensais.length}</div></div>
+    <div class="resumo-card"><label>Plano Diário</label><div class="valor">${diarios.length}</div></div>
+    <div class="resumo-card"><label>Check-ins hoje</label><div class="valor">${hoje.length}</div></div>
+  `;
+
+  // Presentes agora
+  const listaEl = document.getElementById('cw-lista-presentes');
+  const contEl = document.getElementById('cw-contador-presentes');
+  contEl.textContent = presentes.length ? `${presentes.length} pessoa(s)` : '';
+  if(presentes.length===0){
+    listaEl.innerHTML='<div class="cw-vazio">Nenhum cliente no espaço agora.</div>';
+  } else {
+    listaEl.innerHTML = presentes.map(s=>{
+      const c = clientes.find(x=>x.id===s.cliente_id)||{nome:'?'};
+      return `<div class="cw-presente-item">
+        <div style="flex:1">
+          <div class="cw-presente-nome">${esc(c.nome)}</div>
+          <div class="cw-presente-tempo">Entrou às ${cwFormatHora(s.entrada)} · ${cwDuracao(s.entrada)}</div>
+        </div>
+        <span class="cw-presente-badge ${s.plano||''}">${{diario:'Diário',mensal:'Mensal',fixo:'Fixo',hora:'Por Hora'}[s.plano]||s.plano}</span>
+        <button class="btn-checkout" onclick="cwCheckOut('${s.id}')">Check-out</button>
+      </div>`;
+    }).join('');
+  }
+
+  renderClientes();
+}
+
+function renderClientes(){
+  const clientes = cwCarregarClientes();
+  const busca = (document.getElementById('cw-busca')||{}).value?.toLowerCase()||'';
+  const filtroPlano = (document.getElementById('cw-filtro-plano')||{}).value||'';
+  const sessoes = cwCarregarSessoes();
+
+  let lista = clientes.filter(c=>c.ativo!==false);
+  if(busca) lista = lista.filter(c=>c.nome.toLowerCase().includes(busca)||(c.email||'').toLowerCase().includes(busca)||(c.telefone||'').includes(busca));
+  if(filtroPlano) lista = lista.filter(c=>c.plano===filtroPlano);
+
+  const el = document.getElementById('cw-tabela-clientes');
+  if(lista.length===0){ el.innerHTML='<div class="cw-vazio" style="padding:32px">Nenhum cliente encontrado.</div>'; return; }
+
+  const presentes = sessoes.filter(s=>!s.saida).map(s=>s.cliente_id);
+  const mes = cwMesAtual();
+
+  const nomeLabels = {diario:'Diário',mensal:'Mensal',fixo:'Fixo',hora:'Por Hora'};
+  el.innerHTML = `<table>
+    <thead><tr>
+      <th>Nome</th><th>Contato</th><th>Plano</th><th>Valor / Horas</th><th>Status</th><th>Ações</th>
+    </tr></thead>
+    <tbody>${lista.map(c=>{
+      const presente = presentes.includes(c.id);
+      const usadas = c.plano==='hora' ? cwHorasUsadasMes(c.id) : null;
+      const valorHtml = c.plano==='hora'
+        ? `<div style="font-size:.8rem;color:var(--cinza)">${(usadas||0).toFixed(1)}h usadas</div><div style="font-size:.76rem;color:var(--cinza)">R$ ${Number(c.horas_limite||0).toFixed(2)}/h</div>`
+        : `<span style="font-size:.82rem;color:var(--cinza)">R$ ${Number(c.valor_dia||0).toFixed(2)}</span>`;
+      return `<tr>
+        <td style="font-weight:600">${esc(c.nome)}</td>
+        <td style="font-size:.79rem;color:var(--cinza)">${esc(c.telefone||'')}${c.email?`<br>${esc(c.email)}`:''}
+        </td>
+        <td><span class="cw-plano-badge ${c.plano}">${nomeLabels[c.plano]||c.plano}</span></td>
+        <td>${valorHtml}</td>
+        <td><span class="badge ${presente?'ok':'baixo'}">${presente?'Presente':'Ausente'}</span></td>
+        <td>
+          ${presente
+            ? `<button class="btn-checkout" onclick="cwCheckOutPorCliente('${c.id}')">Check-out</button>`
+            : `<button class="btn-ponto entrada" onclick="cwCheckIn('${c.id}')" style="font-size:.73rem;padding:4px 9px">Check-in</button>`
+          }
+          <button class="btn-editar" onclick="abrirModalCliente('${c.id}')" style="margin-left:4px">Editar</button>
+          <button class="btn-editar" onclick="cwVerHistorico('${c.id}')" style="margin-left:4px;border-color:var(--espresso);color:var(--espresso)">Histórico</button>
+          <button class="btn-remover" onclick="cwRemoverCliente('${c.id}')">Remover</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+function cwCheckIn(clienteId){
+  const clientes = cwCarregarClientes();
+  const c = clientes.find(x=>x.id===clienteId);
+  if(!c) return;
+  const sessoes = cwCarregarSessoes();
+  if(sessoes.find(s=>s.cliente_id===clienteId&&!s.saida)){ toast('Cliente já está presente!'); return; }
+  if(c.plano==='diario'){
+    document.getElementById('cw-ci-cliente-id').value = clienteId;
+    document.getElementById('modal-checkin-nome').textContent = c.nome;
+    document.getElementById('cw-ci-valor').value = c.valor_dia||'';
+    document.getElementById('modal-checkin-bg').classList.add('aberto');
+    return;
+  }
+  const id = 'cw_'+Date.now();
+  sessoes.push({id,cliente_id:clienteId,cliente_nome:c.nome,entrada:new Date().toISOString(),saida:null,horas:null,data:cwHojeStr(),plano:c.plano,valor:0});
+  cwSalvarSessoes(sessoes);
+  toast('Check-in realizado — '+c.nome);
+  renderCoworking();
+}
+
+function confirmarCheckinDiario(){
+  const clienteId = document.getElementById('cw-ci-cliente-id').value;
+  const valor = parseFloat(document.getElementById('cw-ci-valor').value)||0;
+  const clientes = cwCarregarClientes();
+  const c = clientes.find(x=>x.id===clienteId);
+  if(!c) return;
+  const sessoes = cwCarregarSessoes();
+  const id = 'cw_'+Date.now();
+  sessoes.push({id,cliente_id:clienteId,cliente_nome:c.nome,entrada:new Date().toISOString(),saida:null,horas:null,data:cwHojeStr(),plano:'diario',valor});
+  cwSalvarSessoes(sessoes);
+  fecharModalCheckin();
+  toast('Check-in realizado — '+c.nome);
+  renderCoworking();
+}
+
+function cwCheckOut(sessaoId){
+  const sessoes = cwCarregarSessoes();
+  const s = sessoes.find(x=>x.id===sessaoId);
+  if(!s||s.saida) return;
+  s.saida = new Date().toISOString();
+  s.horas = cwHorasDecimal(s.entrada, s.saida);
+  cwSalvarSessoes(sessoes);
+  toast(`Check-out — ${esc(s.cliente_nome)} (${s.horas.toFixed(1)}h)`);
+  renderCoworking();
+}
+
+function cwCheckOutPorCliente(clienteId){
+  const sessoes = cwCarregarSessoes();
+  const s = sessoes.find(x=>x.cliente_id===clienteId&&!x.saida);
+  if(s) cwCheckOut(s.id);
+}
+
+function cwVerHistorico(clienteId){
+  const clientes = cwCarregarClientes();
+  const c = clientes.find(x=>x.id===clienteId);
+  if(!c) return;
+  const sessoes = cwCarregarSessoes().filter(s=>s.cliente_id===clienteId&&s.saida).sort((a,b)=>new Date(b.entrada)-new Date(a.entrada));
+  document.getElementById('modal-hist-titulo').textContent = 'Histórico — '+esc(c.nome);
+  const mes = cwMesAtual();
+  const totalMes = sessoes.filter(s=>s.data&&s.data.startsWith(mes)).reduce((a,s)=>a+(s.horas||0),0);
+  let html = `<div style="background:var(--creme);border-radius:9px;padding:11px 14px;margin-bottom:14px;font-size:.83rem">
+    <strong>Plano:</strong> ${c.plano==='mensal'?'Mensal':'Diário'} &nbsp;·&nbsp;
+    ${c.plano==='mensal'?`<strong>Horas este mês:</strong> ${totalMes.toFixed(1)}h / ${c.horas_limite||0}h`:`<strong>Sessões este mês:</strong> ${sessoes.filter(s=>s.data&&s.data.startsWith(mes)).length}`}
+  </div>`;
+  if(sessoes.length===0){ html += '<div class="cw-vazio">Nenhuma sessão registrada.</div>'; }
+  else {
+    html += '<div style="max-height:320px;overflow-y:auto">';
+    sessoes.forEach(s=>{
+      const d = new Date(s.entrada).toLocaleDateString('pt-BR');
+      const entrada = cwFormatHora(s.entrada);
+      const saida = cwFormatHora(s.saida);
+      html += `<div class="cw-hist-item">
+        <div><div style="font-weight:600;font-size:.83rem">${d}</div><div class="cw-hist-data">${entrada} → ${saida}</div></div>
+        <div style="text-align:right">
+          <div class="cw-hist-horas">${(s.horas||0).toFixed(1)}h</div>
+          ${s.plano==='diario'&&s.valor?`<div style="font-size:.75rem;color:var(--verde)">R$ ${Number(s.valor).toFixed(2)}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  document.getElementById('modal-hist-conteudo').innerHTML = html;
+  document.getElementById('modal-hist-bg').classList.add('aberto');
+}
+
+function cwRemoverCliente(id){
+  if(!confirm('Remover este cliente? As sessões serão mantidas no histórico.')) return;
+  const clientes = cwCarregarClientes();
+  const idx = clientes.findIndex(c=>c.id===id);
+  if(idx===-1) return;
+  clientes[idx].ativo = false;
+  cwSalvarClientes(clientes);
+  toast('Cliente removido.');
+  renderCoworking();
+}
+
+function abrirModalCliente(id){
+  const clientes = cwCarregarClientes();
+  const c = id ? clientes.find(x=>x.id===id) : null;
+  document.getElementById('modal-cliente-titulo').textContent = c ? 'Editar Cliente' : 'Novo Cliente';
+  document.getElementById('cw-f-id').value = c ? c.id : '';
+  document.getElementById('cw-f-nome').value = c ? c.nome : '';
+  document.getElementById('cw-f-tel').value = c ? (c.telefone||'') : '';
+  document.getElementById('cw-f-email').value = c ? (c.email||'') : '';
+  document.getElementById('cw-f-plano').value = c ? c.plano : 'diario';
+  document.getElementById('cw-f-horas').value = c ? (c.horas_limite||'') : '';
+  document.getElementById('cw-f-valor-dia').value = c ? (c.valor_dia||'') : '';
+  toggleCwHoras();
+  document.getElementById('modal-cliente-bg').classList.add('aberto');
+  setTimeout(()=>document.getElementById('cw-f-nome').focus(),100);
+}
+
+function toggleCwHoras(){
+  const plano = document.getElementById('cw-f-plano').value;
+  const labelMap = {diario:'Valor por dia (R$)', mensal:'Valor mensal (R$)', fixo:'Valor fixo (R$)', hora:'Valor por hora (R$)'};
+  document.getElementById('cw-grupo-valor').style.display = plano==='hora' ? 'none' : '';
+  document.getElementById('cw-grupo-horas').style.display = plano==='hora' ? '' : 'none';
+  document.getElementById('cw-label-valor').textContent = labelMap[plano]||'Valor (R$)';
+}
+
+function salvarCliente(){
+  const nome = document.getElementById('cw-f-nome').value.trim();
+  if(!nome){ toast('Informe o nome do cliente.'); return; }
+  const plano = document.getElementById('cw-f-plano').value;
+  const clientes = cwCarregarClientes();
+  const existeId = document.getElementById('cw-f-id').value;
+  if(existeId){
+    const idx = clientes.findIndex(c=>c.id===existeId);
+    if(idx!==-1){
+      clientes[idx].nome = nome;
+      clientes[idx].telefone = document.getElementById('cw-f-tel').value.trim();
+      clientes[idx].email = document.getElementById('cw-f-email').value.trim();
+      clientes[idx].plano = plano;
+      clientes[idx].horas_limite = plano==='hora' ? (parseFloat(document.getElementById('cw-f-horas').value)||0) : 0;
+      clientes[idx].valor_dia = plano!=='hora' ? (parseFloat(document.getElementById('cw-f-valor-dia').value)||0) : 0;
+    }
+  } else {
+    clientes.push({
+      id: 'cli_'+Date.now(),
+      nome,
+      telefone: document.getElementById('cw-f-tel').value.trim(),
+      email: document.getElementById('cw-f-email').value.trim(),
+      plano,
+      horas_limite: plano==='hora' ? (parseFloat(document.getElementById('cw-f-horas').value)||0) : 0,
+      valor_dia: plano!=='hora' ? (parseFloat(document.getElementById('cw-f-valor-dia').value)||0) : 0,
+      ativo: true,
+      criado_em: new Date().toISOString()
+    });
+  }
+  cwSalvarClientes(clientes);
+  fecharModalCliente();
+  toast(existeId ? 'Cliente atualizado!' : 'Cliente cadastrado!');
+  renderCoworking();
+}
+
+function fecharModalCliente(){ document.getElementById('modal-cliente-bg').classList.remove('aberto'); }
+function fecharModalHist(){ document.getElementById('modal-hist-bg').classList.remove('aberto'); }
+function fecharModalCheckin(){ document.getElementById('modal-checkin-bg').classList.remove('aberto'); }
 </script>
 </body>
 </html>
