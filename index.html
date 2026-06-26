@@ -55,11 +55,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--espres
 .troca-diff .negativo{color:var(--vermelho)}
 
 /* BUSCA PDV */
-.pdv-busca{position:relative;margin-bottom:14px}
+.pdv-busca-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.pdv-busca{position:relative;flex:1}
 .pdv-busca input{width:100%;padding:9px 36px 9px 14px;border:1.5px solid #ddd;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--espresso);background:white;transition:.2s}
 .pdv-busca input:focus{border-color:var(--caramelo);outline:none;box-shadow:0 0 0 3px rgba(232,192,125,.15)}
 .pdv-busca-limpar{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--cinza);cursor:pointer;font-size:.95rem;padding:2px 5px;border-radius:4px;transition:.2s}
 .pdv-busca-limpar:hover{color:var(--vermelho)}
+.btn-ordem-alfa{padding:8px 11px;border:1.5px solid #ddd;border-radius:10px;background:white;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--cinza);font-family:'DM Sans',sans-serif;transition:.2s;white-space:nowrap;flex-shrink:0}
+.btn-ordem-alfa:hover{border-color:var(--caramelo);color:var(--caramelo)}
+.btn-ordem-alfa.ativo{background:var(--espresso);color:white;border-color:var(--espresso)}
 
 /* TOPBAR */
 .topbar{background:var(--espresso);color:var(--creme);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.3)}
@@ -108,7 +112,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--espres
 .produto-card .nome{font-weight:600;font-size:.82rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;line-height:1.35;max-height:2.7em;width:100%}
 .produto-card .preco{color:var(--caramelo);font-weight:700;font-size:.9rem;margin-top:4px;white-space:nowrap}
 .produto-card .est{font-size:.7rem;color:var(--cinza);margin-top:2px}
-.produto-card.sem-estoque{opacity:.4;pointer-events:none}
+.produto-card.sem-estoque{opacity:.6}
 .prod-alerta-badge{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--amarelo)}
 .prod-alerta-badge.critico{background:var(--vermelho)}
 
@@ -146,6 +150,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--espres
 .troco-area input{width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:.84rem;font-family:'DM Sans',sans-serif}
 .troco-area input:focus{border-color:var(--caramelo);outline:none}
 .troco-resultado{font-size:.79rem;font-weight:700;margin-top:3px}
+.pgto-btn-dividir{width:100%;padding:6px;border:1.5px dashed #c87941;border-radius:7px;background:none;cursor:pointer;font-size:.74rem;font-weight:600;color:#c87941;margin-bottom:7px;transition:.2s;font-family:'DM Sans',sans-serif}
+.pgto-btn-dividir:hover,.pgto-btn-dividir.ativo{background:#c87941;color:white;border-style:solid}
+.divisao-area{display:none;margin-bottom:7px}
+.divisao-area.visivel{display:block}
+.divisao-linha{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.divisao-linha label{font-size:.77rem;font-weight:600;color:var(--cinza);width:55px;flex-shrink:0}
+.divisao-linha input{flex:1;padding:6px 9px;border:1.5px solid #ddd;border-radius:7px;font-size:.83rem;font-family:'DM Sans',sans-serif}
+.divisao-linha input:focus{border-color:var(--caramelo);outline:none}
+.divisao-restante{font-size:.79rem;font-weight:700;padding:5px 9px;border-radius:6px;text-align:right;margin-top:2px}
 
 .carrinho-footer{padding:10px 17px;border-top:1px solid #f0e8e0}
 .total-linha{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -424,6 +437,7 @@ tr:hover td{background:#fdf8f4}
     <button class="nav-btn" onclick="ir('caixa',this)">Caixa</button>
     <button class="nav-btn" onclick="ir('despesas',this)">Despesas</button>
     <button class="nav-btn" onclick="ir('estoque',this)">Estoque</button>
+    <button class="nav-btn" onclick="ir('compras',this)">Compras</button>
     <button class="nav-btn" onclick="ir('funcionarios',this)">Funcionários</button>
     <button class="nav-btn" onclick="ir('relatorios',this)">Relatórios</button>
     <button class="nav-btn" onclick="ir('coworking',this)">Coworking</button>
@@ -452,9 +466,12 @@ tr:hover td{background:#fdf8f4}
     <div class="resumo-card vermelho"><label>Estoque Crítico</label><div class="valor" id="r-critico">0</div><div class="sub">itens em falta</div></div>
   </div>
   <div class="pdv-categorias" id="pdv-categorias"></div>
-  <div class="pdv-busca">
-    <input type="text" id="pdv-busca-input" placeholder="🔍 Buscar produto..." oninput="filtrarBuscaPDV(this.value)">
-    <button class="pdv-busca-limpar" id="pdv-busca-limpar" onclick="limparBuscaPDV()" style="display:none">✕</button>
+  <div class="pdv-busca-row">
+    <div class="pdv-busca">
+      <input type="text" id="pdv-busca-input" placeholder="🔍 Buscar produto..." oninput="filtrarBuscaPDV(this.value)">
+      <button class="pdv-busca-limpar" id="pdv-busca-limpar" onclick="limparBuscaPDV()" style="display:none">✕</button>
+    </div>
+    <button class="btn-ordem-alfa" id="btn-ordem-alfa" onclick="toggleOrdemAlfa()" title="Ordenar alfabeticamente">A-Z</button>
   </div>
   <div class="pdv-grid">
     <div><div class="produtos-grid" id="grade-produtos"></div></div>
@@ -478,6 +495,22 @@ tr:hover td{background:#fdf8f4}
           <button class="pgto-btn ativo" onclick="selecionarPgto('dinheiro',this)">Dinheiro</button>
           <button class="pgto-btn" onclick="selecionarPgto('cartao',this)">Cartão</button>
           <button class="pgto-btn" onclick="selecionarPgto('pix',this)">Pix</button>
+        </div>
+        <button class="pgto-btn-dividir" id="btn-dividir-pgto" onclick="selecionarPgto('divisao',this)">+ Dividir entre formas</button>
+        <div class="divisao-area" id="divisao-area">
+          <div class="divisao-linha">
+            <label>Dinheiro</label>
+            <input type="number" id="div-dinheiro" placeholder="0,00" min="0" step="0.01" oninput="calcularDivisao()">
+          </div>
+          <div class="divisao-linha">
+            <label>Cartão</label>
+            <input type="number" id="div-cartao" placeholder="0,00" min="0" step="0.01" oninput="calcularDivisao()">
+          </div>
+          <div class="divisao-linha">
+            <label>Pix</label>
+            <input type="number" id="div-pix" placeholder="0,00" min="0" step="0.01" oninput="calcularDivisao()">
+          </div>
+          <div class="divisao-restante" id="divisao-restante"></div>
         </div>
         <div class="troco-area visivel" id="troco-area">
           <input type="number" id="valor-recebido" placeholder="Valor recebido (R$)" oninput="calcularTroco()">
@@ -572,11 +605,49 @@ tr:hover td{background:#fdf8f4}
       <button class="btn-add" onclick="abrirModalProd()">+ Novo Produto</button>
     </div>
   </div>
+  <div class="pdv-busca" style="margin-bottom:14px">
+    <input type="text" id="estoque-busca-input" placeholder="🔍 Buscar produto..." oninput="filtrarBuscaEstoque(this.value)">
+    <button class="pdv-busca-limpar" id="estoque-busca-limpar" onclick="limparBuscaEstoque()" style="display:none">✕</button>
+  </div>
   <div class="tabela-wrapper">
   <table>
     <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Alerta</th><th>Status</th><th>Ações</th></tr></thead>
     <tbody id="tabela-estoque"></tbody>
   </table>
+  </div>
+</div>
+
+<!-- LISTA DE COMPRAS -->
+<div class="tela" id="tela-compras">
+  <div class="estoque-header">
+    <div class="sec-header" style="margin:0"><h2>Lista de Compras</h2><p>Organize o que precisa comprar</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-add" style="background:#5a6b5e" onclick="limparListaCompras()">Limpar Lista</button>
+      <button class="btn-add" onclick="imprimirListaCompras()">Imprimir Lista</button>
+    </div>
+  </div>
+
+  <div class="compras-sugestoes-box" id="compras-sugestoes-box" style="display:none">
+    <div class="compras-sugestoes-titulo">
+      <span>Estoque baixo ou zerado</span>
+      <button class="btn-add-sugestao" onclick="adicionarTodasSugestoes()">+ Adicionar todos</button>
+    </div>
+    <div id="compras-sugestoes"></div>
+  </div>
+
+  <div class="compras-add-row">
+    <input class="lc-nome" id="lc-nome" type="text" placeholder="Nome do item..." onkeydown="if(event.key==='Enter')adicionarItemManual()">
+    <input class="lc-qtd" id="lc-qtd" type="number" placeholder="Qtd" min="0">
+    <input class="lc-unidade" id="lc-unidade" type="text" placeholder="un / kg / L">
+    <button class="btn-add" onclick="adicionarItemManual()">+ Adicionar</button>
+  </div>
+
+  <div class="compras-lista-box">
+    <div class="compras-lista-header">
+      <span>Itens da lista</span>
+      <span class="compras-counter" id="compras-counter">0 pendentes</span>
+    </div>
+    <div id="compras-lista"><div class="compras-vazia">Nenhum item na lista. Adicione acima ou use as sugestões.</div></div>
   </div>
 </div>
 
@@ -1170,6 +1241,39 @@ tr:hover td{background:#fdf8f4}
   .pgto-btns{gap:4px}
   .nav-btn{font-size:.72rem;padding:4px 8px}
 }
+
+/* LISTA DE COMPRAS */
+.compras-sugestoes-box{background:#fff8ec;border:1.5px solid var(--amarelo);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.compras-sugestoes-titulo{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.compras-sugestoes-titulo span{font-size:.8rem;font-weight:700;color:#8a6000;text-transform:uppercase;letter-spacing:.4px}
+.sugestao-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0e0c0;font-size:.85rem;color:var(--espresso)}
+.sugestao-item:last-child{border-bottom:none}
+.sugestao-badge{font-size:.7rem;padding:2px 8px;border-radius:10px;font-weight:700;margin-right:7px}
+.sugestao-badge.critico{background:#fdeaea;color:#b84040}
+.sugestao-badge.baixo{background:#fff4e0;color:#8a6000}
+.btn-add-sugestao{background:var(--espresso);color:white;border:none;border-radius:6px;padding:4px 11px;font-size:.74rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.15s}
+.btn-add-sugestao:hover{background:var(--cafe)}
+.compras-add-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.compras-add-row input{padding:9px 12px;border:1.5px solid #ddd;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--espresso);background:white}
+.compras-add-row input:focus{border-color:var(--caramelo);outline:none}
+.compras-add-row .lc-nome{flex:2;min-width:140px}
+.compras-add-row .lc-qtd{width:65px}
+.compras-add-row .lc-unidade{width:75px}
+.compras-lista-box{background:white;border-radius:12px;box-shadow:var(--sombra);overflow:hidden}
+.compras-lista-header{padding:12px 16px;border-bottom:1px solid #f0e8e0;display:flex;justify-content:space-between;align-items:center}
+.compras-lista-header span{font-size:.78rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:.4px}
+.compras-counter{font-size:.78rem;color:var(--caramelo);font-weight:700}
+.compras-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #f5f0e8;transition:.15s}
+.compras-item:last-child{border-bottom:none}
+.compras-item:hover{background:#faf8f5}
+.compras-item.comprado{background:#f9f9f7}
+.compras-item input[type=checkbox]{width:17px;height:17px;accent-color:var(--espresso);cursor:pointer;flex-shrink:0}
+.compras-item .ci-nome{flex:1;font-size:.9rem;font-weight:500;color:var(--espresso)}
+.compras-item.comprado .ci-nome{text-decoration:line-through;color:#aaa}
+.compras-item .ci-qtd{font-size:.82rem;color:var(--cinza);font-weight:600;min-width:64px;text-align:right}
+.compras-item .ci-del{background:none;border:none;color:#ccc;cursor:pointer;font-size:.9rem;padding:2px 5px;border-radius:4px;transition:.15s;flex-shrink:0}
+.compras-item .ci-del:hover{color:var(--vermelho)}
+.compras-vazia{padding:30px;text-align:center;color:var(--cinza);font-size:.85rem}
 </style>
 
 <script>
@@ -1517,6 +1621,7 @@ async function ir(tela,btn){
   if(tela==='ifood')renderIfood();
   if(tela==='backup')renderBackupInfo();
   if(tela==='coworking')renderCoworking();
+  if(tela==='compras')renderCompras();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1571,6 +1676,7 @@ function verificarAlertas(){
 // ═══════════════════════════════════════════════════
 let filtroCatPDV = 'Todos';
 let filtroBuscaPDV = '';
+let ordemAlfaPDV = false;
 
 function filtrarBuscaPDV(val){
   filtroBuscaPDV = val.trim().toLowerCase();
@@ -1581,6 +1687,14 @@ function limparBuscaPDV(){
   filtroBuscaPDV = '';
   document.getElementById('pdv-busca-input').value = '';
   document.getElementById('pdv-busca-limpar').style.display = 'none';
+  renderProdutos();
+}
+
+function toggleOrdemAlfa(){
+  ordemAlfaPDV = !ordemAlfaPDV;
+  const btn = document.getElementById('btn-ordem-alfa');
+  btn.classList.toggle('ativo', ordemAlfaPDV);
+  btn.textContent = ordemAlfaPDV ? 'A-Z ✓' : 'A-Z';
   renderProdutos();
 }
 
@@ -1613,6 +1727,7 @@ function renderProdutos(){
   const g=document.getElementById('grade-produtos');g.innerHTML='';
   let lista = filtroCatPDV === 'Todos' ? produtos : produtos.filter(p => p.cat === filtroCatPDV);
   if(filtroBuscaPDV) lista = lista.filter(p => p.nome.toLowerCase().includes(filtroBuscaPDV));
+  if(ordemAlfaPDV) lista = [...lista].sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR'));
   if(lista.length === 0){
     g.innerHTML = '<div style="color:var(--cinza);font-size:.85rem;padding:20px">Nenhum produto encontrado.</div>';
     return;
@@ -1635,7 +1750,6 @@ function renderProdutos(){
 function adicionarAoCarrinho(id){
   const prod=produtos.find(p=>p.id===id);
   const item=carrinho.find(i=>i.id===id);
-  if((item?item.qtd:0)>=prod.estoque){toast('Estoque insuficiente!');return;}
   // Se começou uma nova venda (carrinho estava vazio) após outra venda, limpa a ultimaVenda
   if(carrinho.length === 0 && ultimaVenda) ultimaVenda = null;
   if(item)item.qtd++;else carrinho.push({id:prod.id,nome:prod.nome,preco:prod.preco,qtd:1});
@@ -1719,11 +1833,22 @@ function calcularDesconto(){
 function selecionarPgto(forma,btn){
   formaPgto=forma;
   document.querySelectorAll('.pgto-btn').forEach(b=>b.classList.remove('ativo'));
-  btn.classList.add('ativo');
+  document.getElementById('btn-dividir-pgto').classList.remove('ativo');
   const ta=document.getElementById('troco-area');
-  forma==='dinheiro'?ta.classList.add('visivel'):ta.classList.remove('visivel');
-  document.getElementById('troco-resultado').textContent='';
-  if(forma==='dinheiro')calcularTroco();
+  const da=document.getElementById('divisao-area');
+  if(forma==='divisao'){
+    document.getElementById('btn-dividir-pgto').classList.add('ativo');
+    ta.classList.remove('visivel');
+    da.classList.add('visivel');
+    calcularDivisao();
+  } else {
+    btn.classList.add('ativo');
+    da.classList.remove('visivel');
+    document.getElementById('divisao-restante').textContent='';
+    forma==='dinheiro'?ta.classList.add('visivel'):ta.classList.remove('visivel');
+    document.getElementById('troco-resultado').textContent='';
+    if(forma==='dinheiro')calcularTroco();
+  }
 }
 
 function calcularTroco(){
@@ -1736,6 +1861,30 @@ function calcularTroco(){
     el.textContent=troco>=0?'Troco: R$ '+troco.toFixed(2).replace('.',','):'Valor insuficiente!';
     el.style.color=troco>=0?'var(--verde)':'var(--vermelho)';
   } else {el.textContent='';}
+}
+
+function calcularDivisao(){
+  const subtotal=carrinho.reduce((s,i)=>s+i.preco*i.qtd,0);
+  const total=Math.max(0,subtotal-descontoAtual);
+  const din=parseFloat(document.getElementById('div-dinheiro').value)||0;
+  const cart=parseFloat(document.getElementById('div-cartao').value)||0;
+  const pix=parseFloat(document.getElementById('div-pix').value)||0;
+  const soma=din+cart+pix;
+  const restante=total-soma;
+  const el=document.getElementById('divisao-restante');
+  if(Math.abs(restante)<0.01){
+    el.textContent='Valores conferidos';
+    el.style.color='var(--verde)';
+    el.style.background='#e8f5e0';
+  } else if(restante>0){
+    el.textContent='Falta: R$ '+restante.toFixed(2).replace('.',',');
+    el.style.color='var(--vermelho)';
+    el.style.background='#fdeaea';
+  } else {
+    el.textContent='Excede em: R$ '+Math.abs(restante).toFixed(2).replace('.',',');
+    el.style.color='var(--vermelho)';
+    el.style.background='#fdeaea';
+  }
 }
 
 async function finalizarVenda(){
@@ -1753,9 +1902,23 @@ async function finalizarVenda(){
       p.estoque -= item.qtd;
     }
   }
+  let pgtoSalvo;
+  if(formaPgto==='divisao'){
+    const din=parseFloat(document.getElementById('div-dinheiro').value)||0;
+    const cart=parseFloat(document.getElementById('div-cartao').value)||0;
+    const pix=parseFloat(document.getElementById('div-pix').value)||0;
+    if(Math.abs(din+cart+pix-total)>0.01){
+      toast('Os valores da divisão não somam o total!');
+      esconderLoading();
+      return;
+    }
+    pgtoSalvo={dinheiro:din,cartao:cart,pix};
+  } else {
+    pgtoSalvo=formaPgto;
+  }
   const venda = await dbInsert('vendas',{
     subtotal, desconto: descontoAtual, total, itens,
-    pgto: formaPgto, operador: usuarioLogado?usuarioLogado.nome:'-',
+    pgto: pgtoSalvo, operador: usuarioLogado?usuarioLogado.nome:'-',
     data: new Date().toISOString()
   });
   esconderLoading();
@@ -1766,7 +1929,7 @@ async function finalizarVenda(){
 
     // Mostrar modal de sucesso com opção de imprimir
     document.getElementById('sucesso-total').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
-    document.getElementById('sucesso-pgto').textContent = 'Pagamento: ' + formaPgto.charAt(0).toUpperCase() + formaPgto.slice(1);
+    document.getElementById('sucesso-pgto').textContent = 'Pagamento: ' + pgtoDescricao(pgtoSalvo);
     const trocoEl = document.getElementById('sucesso-troco');
     if(formaPgto === 'dinheiro'){
       const rec = parseFloat(document.getElementById('valor-recebido').value) || 0;
@@ -1781,6 +1944,10 @@ async function finalizarVenda(){
   document.getElementById('desconto-val').textContent='';
   document.getElementById('valor-recebido').value='';
   document.getElementById('troco-resultado').textContent='';
+  document.getElementById('div-dinheiro').value='';
+  document.getElementById('div-cartao').value='';
+  document.getElementById('div-pix').value='';
+  document.getElementById('divisao-restante').textContent='';
   descontoAtual=0;
   carrinho=[];
   // Atualiza UI imediatamente com estado local já corrigido
@@ -1849,12 +2016,28 @@ async function fecharCaixa(){
   toast('Caixa fechado!');
 }
 
+function pgtoValorPorMetodo(venda,metodo){
+  if(typeof venda.pgto==='object'&&venda.pgto!==null) return Number(venda.pgto[metodo]||0);
+  return venda.pgto===metodo?Number(venda.total):0;
+}
+
+function pgtoDescricao(pgto){
+  if(typeof pgto==='object'&&pgto!==null){
+    const partes=[];
+    if(pgto.dinheiro>0) partes.push('Dinheiro R$'+Number(pgto.dinheiro).toFixed(2).replace('.',','));
+    if(pgto.cartao>0) partes.push('Cartão R$'+Number(pgto.cartao).toFixed(2).replace('.',','));
+    if(pgto.pix>0) partes.push('Pix R$'+Number(pgto.pix).toFixed(2).replace('.',','));
+    return partes.join(' + ');
+  }
+  return (pgto||'N/A').charAt(0).toUpperCase()+(pgto||'N/A').slice(1);
+}
+
 function calcularResumoCaixa(){
   const hoje=caixaAtual?new Date(caixaAtual.abertura).toDateString():new Date().toDateString();
   const vd=vendas.filter(v=>new Date(v.data).toDateString()===hoje);
-  const din=vd.filter(v=>v.pgto==='dinheiro').reduce((s,v)=>s+Number(v.total),0);
-  const cart=vd.filter(v=>v.pgto==='cartao').reduce((s,v)=>s+Number(v.total),0);
-  const pix=vd.filter(v=>v.pgto==='pix').reduce((s,v)=>s+Number(v.total),0);
+  const din=vd.reduce((s,v)=>s+pgtoValorPorMetodo(v,'dinheiro'),0);
+  const cart=vd.reduce((s,v)=>s+pgtoValorPorMetodo(v,'cartao'),0);
+  const pix=vd.reduce((s,v)=>s+pgtoValorPorMetodo(v,'pix'),0);
   const sg=sangrias.filter(s=>new Date(s.data).toDateString()===hoje).reduce((a,s)=>a+Number(s.valor),0);
   const desp=despesas.filter(d=>new Date(d.data+'T00:00:00').toDateString()===hoje).reduce((s,d)=>s+Number(d.valor),0);
   const si=caixaAtual?Number(caixaAtual.saldo_inicial):0;
@@ -2075,6 +2258,20 @@ async function removerDuplicatasProdutos(){
   );
 }
 
+let filtroEstoque = '';
+
+function filtrarBuscaEstoque(val){
+  filtroEstoque = val.trim().toLowerCase();
+  document.getElementById('estoque-busca-limpar').style.display = filtroEstoque ? 'block' : 'none';
+  renderEstoque();
+}
+function limparBuscaEstoque(){
+  filtroEstoque = '';
+  document.getElementById('estoque-busca-input').value = '';
+  document.getElementById('estoque-busca-limpar').style.display = 'none';
+  renderEstoque();
+}
+
 function renderEstoque(){
   const tb=document.getElementById('tabela-estoque');tb.innerHTML='';
   // Detectar duplicatas no banco (antes da deduplicação em memória)
@@ -2087,7 +2284,11 @@ function renderEstoque(){
       if(temDupl) btnDupl.textContent = `Remover Duplicatas (${nomes.length - new Set(nomes).size} excesso)`;
     }).catch(()=>{});
   }
-  produtos.forEach(p=>{
+  const lista = filtroEstoque ? produtos.filter(p => p.nome.toLowerCase().includes(filtroEstoque) || (p.cat||'').toLowerCase().includes(filtroEstoque)) : produtos;
+  if(lista.length === 0){
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--cinza);padding:20px">Nenhum produto encontrado.</td></tr>';
+  }
+  lista.forEach(p=>{
     const alerta=p.alerta||5;
     const st=p.estoque===0?'critico':p.estoque<=alerta?'baixo':'ok';
     const lb=p.estoque===0?'Sem estoque':p.estoque<=alerta?'Baixo':'OK';
@@ -2380,9 +2581,9 @@ function renderRelatorios(){
 
   // Pizza pagamento
   const pgtoEl=document.getElementById('pgto-pizza');
-  const din=vf.filter(v=>v.pgto==='dinheiro').reduce((s,v)=>s+v.total,0);
-  const cart=vf.filter(v=>v.pgto==='cartao').reduce((s,v)=>s+v.total,0);
-  const pix=vf.filter(v=>v.pgto==='pix').reduce((s,v)=>s+v.total,0);
+  const din=vf.reduce((s,v)=>s+pgtoValorPorMetodo(v,'dinheiro'),0);
+  const cart=vf.reduce((s,v)=>s+pgtoValorPorMetodo(v,'cartao'),0);
+  const pix=vf.reduce((s,v)=>s+pgtoValorPorMetodo(v,'pix'),0);
   const totalP=din+cart+pix||1;
   pgtoEl.innerHTML='';
   [{label:'Dinheiro',val:din,cor:'#4a7c59'},{label:'Cartão',val:cart,cor:'#c87941'},{label:'Pix',val:pix,cor:'#3d1f0f'}].forEach(item=>{
@@ -2415,7 +2616,7 @@ function gerarTextoNota(venda){
   txt+=sep+'\n';
   txt+=`     RECIBO DE COMPRA  No ${num}\n`;
   txt+=`  Data: ${data}    Hora: ${hora}\n`;
-  txt+=`  Pagamento: ${(venda.pgto||'N/A').toUpperCase()}\n`;
+  txt+=`  Pagamento: ${typeof venda.pgto==='object'&&venda.pgto!==null?[venda.pgto.dinheiro>0?'DIN R$'+Number(venda.pgto.dinheiro).toFixed(2).replace('.',','):'',venda.pgto.cartao>0?'CART R$'+Number(venda.pgto.cartao).toFixed(2).replace('.',','):'',venda.pgto.pix>0?'PIX R$'+Number(venda.pgto.pix).toFixed(2).replace('.',','):''].filter(Boolean).join('/'):(venda.pgto||'N/A').toUpperCase()}\n`;
   txt+=`  Operador: ${venda.operador||'-'}\n`;
   txt+=sep+'\n';
   txt+='ITEM            QTD   UNIT    TOTAL\n';
@@ -3333,6 +3534,178 @@ function salvarCliente(){
 function fecharModalCliente(){ document.getElementById('modal-cliente-bg').classList.remove('aberto'); }
 function fecharModalHist(){ document.getElementById('modal-hist-bg').classList.remove('aberto'); }
 function fecharModalCheckin(){ document.getElementById('modal-checkin-bg').classList.remove('aberto'); }
+
+// ═══════════════════════════════════════════════════
+// LISTA DE COMPRAS
+// ═══════════════════════════════════════════════════
+function lcCarregar(){ try{ return JSON.parse(localStorage.getItem('lc_itens')||'[]'); }catch(e){ return []; } }
+function lcSalvar(itens){ localStorage.setItem('lc_itens', JSON.stringify(itens)); }
+
+function renderCompras(){
+  const sugestoes = produtos.filter(p => p.estoque === 0 || p.estoque <= (p.alerta||5));
+  const box = document.getElementById('compras-sugestoes-box');
+  const sg = document.getElementById('compras-sugestoes');
+  if(sugestoes.length === 0){
+    box.style.display = 'none';
+  } else {
+    box.style.display = '';
+    sg.innerHTML = '';
+    sugestoes.forEach(p => {
+      const critico = p.estoque === 0;
+      const div = document.createElement('div');
+      div.className = 'sugestao-item';
+      div.innerHTML = `<span>${esc(p.nome)}</span>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span class="sugestao-badge ${critico?'critico':'baixo'}">${critico?'Zerado':'Baixo: '+p.estoque+' un.'}</span>
+          <button class="btn-add-sugestao" onclick="adicionarSugestao(${p.id})">+ Lista</button>
+        </div>`;
+      sg.appendChild(div);
+    });
+  }
+  const itens = lcCarregar();
+  const pendentes = itens.filter(i => !i.comprado).length;
+  document.getElementById('compras-counter').textContent = pendentes + ' pendente' + (pendentes!==1?'s':'');
+  const lc = document.getElementById('compras-lista');
+  if(itens.length === 0){
+    lc.innerHTML = '<div class="compras-vazia">Nenhum item na lista. Adicione acima ou use as sugestões.</div>';
+    return;
+  }
+  lc.innerHTML = '';
+  itens.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'compras-item' + (item.comprado ? ' comprado' : '');
+    div.innerHTML = `<input type="checkbox" ${item.comprado?'checked':''} onchange="toggleComprado('${item.id}')">
+      <span class="ci-nome">${esc(item.nome)}</span>
+      <span class="ci-qtd">${item.qtd ? item.qtd+' '+(item.unidade||'un.') : '—'}</span>
+      <button class="ci-del" onclick="removerItemCompra('${item.id}')" title="Remover">✕</button>`;
+    lc.appendChild(div);
+  });
+}
+
+function adicionarSugestao(prodId){
+  const prod = produtos.find(p => p.id === prodId);
+  if(!prod) return;
+  const itens = lcCarregar();
+  if(itens.find(i => i.prodId === prodId)){ toast('Já está na lista!'); return; }
+  itens.push({ id:'lc_'+Date.now(), prodId, nome:prod.nome, qtd:'', unidade:'un.', comprado:false });
+  lcSalvar(itens);
+  renderCompras();
+  toast(prod.nome + ' adicionado!');
+}
+
+function adicionarTodasSugestoes(){
+  const sugestoes = produtos.filter(p => p.estoque === 0 || p.estoque <= (p.alerta||5));
+  const itens = lcCarregar();
+  let adicionados = 0;
+  sugestoes.forEach(p => {
+    if(!itens.find(i => i.prodId === p.id)){
+      itens.push({ id:'lc_'+Date.now()+'_'+p.id, prodId:p.id, nome:p.nome, qtd:'', unidade:'un.', comprado:false });
+      adicionados++;
+    }
+  });
+  lcSalvar(itens);
+  renderCompras();
+  toast(adicionados + ' item(s) adicionado(s)!');
+}
+
+function adicionarItemManual(){
+  const nome = document.getElementById('lc-nome').value.trim();
+  if(!nome){ toast('Informe o nome do item!'); return; }
+  const qtd = document.getElementById('lc-qtd').value.trim();
+  const unidade = document.getElementById('lc-unidade').value.trim() || 'un.';
+  const itens = lcCarregar();
+  itens.push({ id:'lc_'+Date.now(), prodId:null, nome, qtd, unidade, comprado:false });
+  lcSalvar(itens);
+  document.getElementById('lc-nome').value='';
+  document.getElementById('lc-qtd').value='';
+  document.getElementById('lc-unidade').value='';
+  renderCompras();
+}
+
+function toggleComprado(id){
+  const itens = lcCarregar();
+  const item = itens.find(i => i.id === id);
+  if(item) item.comprado = !item.comprado;
+  lcSalvar(itens);
+  renderCompras();
+}
+
+function removerItemCompra(id){
+  lcSalvar(lcCarregar().filter(i => i.id !== id));
+  renderCompras();
+}
+
+function limparListaCompras(){
+  if(!confirm('Limpar toda a lista de compras?')) return;
+  lcSalvar([]);
+  renderCompras();
+  toast('Lista limpa!');
+}
+
+function imprimirListaCompras(){
+  const itens = lcCarregar();
+  if(itens.length === 0){ toast('A lista está vazia!'); return; }
+  const d = new Date();
+  const data = d.toLocaleDateString('pt-BR');
+  const hora = d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  const rb = JSON.parse(localStorage.getItem('config_recibo')||'{}');
+  const loja = (rb.nome||'Atalaia Hub Coffee').toUpperCase();
+  const sep = '================================';
+  const linha = '--------------------------------';
+  let txt = sep+'\n';
+  txt += loja.substring(0,32).padStart(Math.floor((32+loja.length)/2)).padEnd(32)+'\n';
+  txt += '      LISTA DE COMPRAS\n';
+  txt += sep+'\n';
+  txt += `  Data: ${data}    Hora: ${hora}\n`;
+  const pendentes = itens.filter(i => !i.comprado);
+  const comprados = itens.filter(i => i.comprado);
+  if(pendentes.length > 0){
+    txt += linha+'\n';
+    txt += 'PENDENTES\n';
+    txt += linha+'\n';
+    pendentes.forEach(i => {
+      const n = i.nome.substring(0,22).padEnd(22);
+      const q = (i.qtd ? i.qtd+' '+(i.unidade||'un.') : '').padStart(9);
+      txt += `  [ ] ${n}${q}\n`;
+    });
+  }
+  if(comprados.length > 0){
+    txt += linha+'\n';
+    txt += 'JA COMPRADOS\n';
+    txt += linha+'\n';
+    comprados.forEach(i => {
+      const n = i.nome.substring(0,22).padEnd(22);
+      const q = (i.qtd ? i.qtd+' '+(i.unidade||'un.') : '').padStart(9);
+      txt += `  [x] ${n}${q}\n`;
+    });
+  }
+  txt += linha+'\n';
+  txt += `  Total: ${itens.length} item(s) — ${pendentes.length} pendente(s)\n`;
+  txt += sep+'\n';
+  const textoEsc = esc(txt);
+  const savedBody = document.body.innerHTML;
+  const savedTitle = document.title;
+  const savedScroll = window.scrollY;
+  document.title = 'Lista de Compras';
+  document.body.innerHTML =
+    '<style>@page{size:80mm auto;margin:2mm 1mm}html,body{margin:0!important;padding:0!important;background:#fff!important}'+
+    '#_lc{font-family:"Courier New",Courier,monospace;font-size:13px;line-height:1.4;color:#000;white-space:pre;width:76mm;padding:2mm;margin:0;font-weight:bold}</style>'+
+    '<div id="_lc">'+textoEsc+'</div>';
+  const restaurar = function(){
+    if(!document.getElementById('_lc')) return;
+    document.body.innerHTML = savedBody;
+    document.title = savedTitle;
+    window.scrollTo(0, savedScroll);
+    ['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg','modal-troca-bg'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
+    });
+    window.removeEventListener('afterprint', restaurar);
+  };
+  window.addEventListener('afterprint', restaurar);
+  setTimeout(restaurar, 120000);
+  setTimeout(function(){ window.print(); }, 150);
+}
 </script>
 </body>
 </html>
