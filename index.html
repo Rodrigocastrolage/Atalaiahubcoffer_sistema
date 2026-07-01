@@ -520,6 +520,7 @@ tr:hover td{background:#fdf8f4}
       <div class="carrinho-footer">
         <div class="total-linha"><span>Total</span><span class="total-val" id="total-val">R$ 0,00</span></div>
         <button class="btn-venda" id="btn-finalizar" onclick="finalizarVenda()" disabled>Finalizar Venda</button>
+        <button class="btn-venda" id="btn-cozinha" onclick="imprimirCozinha()" disabled style="background:#5a6b5e">Comanda Cozinha</button>
         <button class="btn-venda escuro" id="btn-nota" onclick="abrirNota()" disabled>Imprimir Recibo</button>
         <button class="btn-limpar" onclick="limparCarrinho()">Limpar pedido</button>
       </div>
@@ -1764,6 +1765,7 @@ function renderCarrinho(){
   if(carrinho.length===0){
     el.innerHTML='<div class="carrinho-vazio">Nenhum item adicionado</div>';
     document.getElementById('btn-finalizar').disabled=true;
+    document.getElementById('btn-cozinha').disabled=true;
     document.getElementById('total-val').textContent='R$ 0,00';
     document.getElementById('desconto-val').textContent='';
     descontoAtual=0; return;
@@ -1785,6 +1787,7 @@ function renderCarrinho(){
   calcularDesconto();
   // Só habilita finalizar se o caixa estiver aberto
   document.getElementById('btn-finalizar').disabled=!caixaAtual;
+  document.getElementById('btn-cozinha').disabled=carrinho.length===0;
   if(!caixaAtual){
     document.getElementById('btn-finalizar').title='Abra o caixa antes de vender';
   }
@@ -2637,6 +2640,53 @@ function gerarTextoNota(venda){
   txt+=sep+'\n';
   txt+='  *Documento sem valor fiscal (MEI)*\n';
   return txt;
+}
+
+function imprimirCozinha(){
+  if(carrinho.length===0){toast('Carrinho vazio!');return;}
+  const agora=new Date();
+  const hora=agora.getHours().toString().padStart(2,'0')+':'+agora.getMinutes().toString().padStart(2,'0');
+  const sep='================================';
+  const linha='--------------------------------';
+  let txt=sep+'\n';
+  txt+='         COMANDA COZINHA\n';
+  txt+=`         ${agora.toLocaleDateString('pt-BR')}  ${hora}\n`;
+  if(usuarioLogado) txt+=`         Operador: ${usuarioLogado.nome}\n`;
+  txt+=sep+'\n';
+  txt+='ITEM                          QTD\n';
+  txt+=linha+'\n';
+  carrinho.forEach(i=>{
+    const nome=i.nome.substring(0,28).padEnd(28);
+    const qtd=String(i.qtd).padStart(3);
+    txt+=`${nome} ${qtd}\n`;
+  });
+  txt+=sep+'\n';
+
+  const savedBody=document.body.innerHTML;
+  const savedTitle=document.title;
+  const savedScroll=window.scrollY;
+  document.title='Comanda Cozinha';
+  document.body.innerHTML=
+    '<style>'+
+      '@page{size:80mm auto;margin:2mm 1mm}'+
+      'html,body{margin:0!important;padding:0!important;background:#fff!important;color:#000!important}'+
+      '#_cz{font-family:"Courier New",Courier,monospace;font-size:14px;line-height:1.5;color:#000;white-space:pre;width:76mm;padding:2mm;margin:0;font-weight:bold}'+
+    '</style>'+
+    '<div id="_cz">'+txt+'</div>';
+  const restaurar=function(){
+    if(!document.getElementById('_cz'))return;
+    document.body.innerHTML=savedBody;
+    document.title=savedTitle;
+    window.scrollTo(0,savedScroll);
+    ['modal-prod-bg','modal-desp-bg','modal-caixa-bg','modal-sangria-bg','modal-func-bg','modal-nota-bg','modal-senha-bg','modal-dados-bg','modal-sucesso-bg','modal-confirma-bg','modal-ifood-bg','modal-troca-bg'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
+    });
+    window.removeEventListener('afterprint',restaurar);
+  };
+  window.addEventListener('afterprint',restaurar);
+  setTimeout(restaurar,120000);
+  setTimeout(function(){window.print();},150);
 }
 
 function abrirNota(){
