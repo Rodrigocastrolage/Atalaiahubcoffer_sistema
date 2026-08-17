@@ -1319,7 +1319,8 @@ async function dbInsert(tabela, obj){
 
 async function dbUpdate(tabela, id, obj){
   const r = await fetch(SUPA_URL+'/rest/v1/'+tabela+'?id=eq.'+id, {method:'PATCH', headers: HEADERS, body: JSON.stringify(obj)});
-  if(!r.ok){ const t=await r.text(); console.error('update '+tabela+': '+t); }
+  if(!r.ok){ const t=await r.text(); console.error('update '+tabela+': '+t); return false; }
+  return true;
 }
 
 async function dbDelete(tabela, id){
@@ -2020,14 +2021,25 @@ async function fecharCaixa(){
   if(!confirm('Confirmar fechamento do caixa?'))return;
   const r=calcularResumoCaixa();
   mostrarLoading('Fechando caixa...');
-  await dbUpdate('caixas', caixaAtual.id, {
-    aberto: false,
-    fechamento: new Date().toISOString(),
-    resumo: r
-  });
+  let sucesso=false;
+  try {
+    sucesso = await dbUpdate('caixas', caixaAtual.id, {
+      aberto: false,
+      fechamento: new Date().toISOString(),
+      resumo: r
+    });
+  } catch(e){
+    esconderLoading();
+    toast('Erro de conexão ao fechar caixa. Tente novamente.');
+    return;
+  }
+  esconderLoading();
+  if(!sucesso){
+    toast('Não foi possível fechar o caixa. Verifique a conexão e tente novamente.');
+    return;
+  }
   caixaAtual=null;
   await carregarDados();
-  esconderLoading();
   renderCaixa(); atualizarAvisoCaixa();
   toast('Caixa fechado!');
 }
