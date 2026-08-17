@@ -1974,6 +1974,14 @@ async function finalizarVenda(){
 }
 
 function atualizarResumo(){
+  if(!caixaAtual){
+    document.getElementById('r-vendas-hoje').textContent='R$ 0,00';
+    document.getElementById('r-qtd-hoje').textContent='0 pedidos';
+    document.getElementById('r-itens-hoje').textContent='0';
+    document.getElementById('r-ticket').textContent='R$ 0,00';
+    document.getElementById('r-critico').textContent=produtos.filter(p=>p.estoque<=0).length;
+    return;
+  }
   const hoje=new Date().toDateString();
   const vh=vendas.filter(v=>new Date(v.data).toDateString()===hoje);
   const th=vh.reduce((s,v)=>s+v.total,0);
@@ -1999,7 +2007,7 @@ async function confirmarAberturaCaixa(){
   caixaAtual = novo;
   esconderLoading();
   fecharModal('modal-caixa-bg');
-  renderCaixa(); atualizarAvisoCaixa();
+  renderCaixa(); atualizarAvisoCaixa(); atualizarResumo();
   toast('Caixa aberto com R$ '+saldo.toFixed(2).replace('.',','));
 }
 
@@ -2040,7 +2048,7 @@ async function fecharCaixa(){
   }
   caixaAtual=null;
   await carregarDados();
-  renderCaixa(); atualizarAvisoCaixa();
+  renderCaixa(); atualizarAvisoCaixa(); atualizarResumo();
   toast('Caixa fechado!');
 }
 
