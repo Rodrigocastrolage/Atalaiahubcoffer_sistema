@@ -1286,10 +1286,20 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const HEADERS = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
 async function dbGet(tabela, filtro=''){
+  // Pagina em blocos de 1000: o Supabase corta silenciosamente respostas maiores que isso,
+  // o que fazia registros mais novos (ex: vendas) sumirem do app sem sumir do banco.
   const url = SUPA_URL+'/rest/v1/'+tabela+'?order=id'+( filtro ? '&'+filtro : '');
-  const r = await fetch(url, {method:'GET', headers: HEADERS});
-  if(!r.ok){ const t=await r.text(); throw new Error(tabela+': '+t); }
-  return await r.json();
+  const tamanhoPagina = 1000;
+  let offset = 0, todos = [];
+  while(true){
+    const r = await fetch(url, {method:'GET', headers: {...HEADERS, 'Range-Unit':'items', 'Range': offset+'-'+(offset+tamanhoPagina-1)}});
+    if(!r.ok){ const t=await r.text(); throw new Error(tabela+': '+t); }
+    const pagina = await r.json();
+    todos = todos.concat(pagina);
+    if(pagina.length < tamanhoPagina) break;
+    offset += tamanhoPagina;
+  }
+  return todos;
 }
 
 async function dbGetOne(tabela, filtro){
@@ -1893,18 +1903,9 @@ function calcularDivisao(){
 async function finalizarVenda(){
   if(carrinho.length===0)return;
   if(!caixaAtual){toast('Abra o caixa antes de vender!');return;}
-  mostrarLoading('Salvando venda...');
   const subtotal=carrinho.reduce((s,i)=>s+i.preco*i.qtd,0);
   const total=Math.max(0,subtotal-descontoAtual);
   const itens=carrinho.map(i=>({id:i.id,nome:i.nome,qtd:i.qtd,preco:i.preco}));
-  // Debitar estoque no banco e localmente
-  for(const item of itens){
-    const p=produtos.find(x=>x.id===item.id);
-    if(p){
-      await dbUpdate('produtos', p.id, {estoque: p.estoque - item.qtd});
-      p.estoque -= item.qtd;
-    }
-  }
   let pgtoSalvo;
   if(formaPgto==='divisao'){
     const din=parseFloat(document.getElementById('div-dinheiro').value)||0;
@@ -1912,37 +1913,49 @@ async function finalizarVenda(){
     const pix=parseFloat(document.getElementById('div-pix').value)||0;
     if(Math.abs(din+cart+pix-total)>0.01){
       toast('Os valores da divisão não somam o total!');
-      esconderLoading();
       return;
     }
     pgtoSalvo={dinheiro:din,cartao:cart,pix};
   } else {
     pgtoSalvo=formaPgto;
   }
-  const venda = await dbInsert('vendas',{
-    subtotal, desconto: descontoAtual, total, itens,
-    pgto: pgtoSalvo, operador: usuarioLogado?usuarioLogado.nome:'-',
-    data: new Date().toISOString()
-  });
-  esconderLoading();
-  if(venda){
-    ultimaVenda = {...venda, itens};
-    vendas.push(ultimaVenda);
-    document.getElementById('btn-nota').disabled=false;
-
-    // Mostrar modal de sucesso com opção de imprimir
-    document.getElementById('sucesso-total').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
-    document.getElementById('sucesso-pgto').textContent = 'Pagamento: ' + pgtoDescricao(pgtoSalvo);
-    const trocoEl = document.getElementById('sucesso-troco');
-    if(formaPgto === 'dinheiro'){
-      const rec = parseFloat(document.getElementById('valor-recebido').value) || 0;
-      if(rec > total) trocoEl.textContent = 'Troco: R$ ' + (rec - total).toFixed(2).replace('.',',');
-      else trocoEl.textContent = '';
-    } else { trocoEl.textContent = ''; }
-    document.getElementById('modal-sucesso-bg').classList.add('aberto');
-  } else {
-    toast('Erro ao salvar venda!'); return;
+  mostrarLoading('Salvando venda...');
+  let venda;
+  try {
+    // Salva a venda primeiro: se falhar, nada foi debitado e o carrinho permanece intacto para nova tentativa.
+    venda = await dbInsert('vendas',{
+      subtotal, desconto: descontoAtual, total, itens,
+      pgto: pgtoSalvo, operador: usuarioLogado?usuarioLogado.nome:'-',
+      data: new Date().toISOString()
+    });
+    // Debitar estoque no banco e localmente (só após a venda estar salva)
+    for(const item of itens){
+      const p=produtos.find(x=>x.id===item.id);
+      if(p){
+        await dbUpdate('produtos', p.id, {estoque: p.estoque - item.qtd});
+        p.estoque -= item.qtd;
+      }
+    }
+  } catch(e){
+    esconderLoading();
+    toast('Erro ao salvar venda: ' + e.message);
+    return;
   }
+  esconderLoading();
+  ultimaVenda = {...venda, itens};
+  vendas.push(ultimaVenda);
+  document.getElementById('btn-nota').disabled=false;
+
+  // Mostrar modal de sucesso com opção de imprimir
+  document.getElementById('sucesso-total').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+  document.getElementById('sucesso-pgto').textContent = 'Pagamento: ' + pgtoDescricao(pgtoSalvo);
+  const trocoEl = document.getElementById('sucesso-troco');
+  if(formaPgto === 'dinheiro'){
+    const rec = parseFloat(document.getElementById('valor-recebido').value) || 0;
+    if(rec > total) trocoEl.textContent = 'Troco: R$ ' + (rec - total).toFixed(2).replace('.',',');
+    else trocoEl.textContent = '';
+  } else { trocoEl.textContent = ''; }
+  document.getElementById('modal-sucesso-bg').classList.add('aberto');
   document.getElementById('desc-valor').value='';
   document.getElementById('desconto-val').textContent='';
   document.getElementById('valor-recebido').value='';
