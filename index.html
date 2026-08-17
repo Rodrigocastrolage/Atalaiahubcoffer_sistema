@@ -1325,7 +1325,8 @@ async function dbUpdate(tabela, id, obj){
 
 async function dbDelete(tabela, id){
   const r = await fetch(SUPA_URL+'/rest/v1/'+tabela+'?id=eq.'+id, {method:'DELETE', headers: HEADERS});
-  if(!r.ok){ const t=await r.text(); console.error('delete '+tabela+': '+t); }
+  if(!r.ok){ const t=await r.text(); console.error('delete '+tabela+': '+t); return false; }
+  return true;
 }
 
 async function dbGetConfig(chave){
@@ -2068,6 +2069,34 @@ function pgtoDescricao(pgto){
   return (pgto||'N/A').charAt(0).toUpperCase()+(pgto||'N/A').slice(1);
 }
 
+async function removerVenda(id){
+  if(!exigirAdmin('remover vendas')) return;
+  const venda = vendas.find(v=>v.id===id);
+  if(!venda) return;
+  if(!confirm('Remover esta venda? O estoque dos itens vendidos será devolvido.')) return;
+  mostrarLoading('Removendo venda...');
+  try {
+    const sucesso = await dbDelete('vendas', id);
+    if(!sucesso){
+      esconderLoading();
+      toast('Não foi possível remover a venda. Tente novamente.');
+      return;
+    }
+    for(const item of venda.itens){
+      const p = produtos.find(x=>x.id===item.id);
+      if(p) await dbUpdate('produtos', p.id, {estoque: p.estoque + item.qtd});
+    }
+  } catch(e){
+    esconderLoading();
+    toast('Erro ao remover venda: ' + e.message);
+    return;
+  }
+  await carregarDados();
+  esconderLoading();
+  renderRelatorios();
+  toast('Venda removida e estoque devolvido.');
+}
+
 function calcularResumoCaixa(){
   const hoje=caixaAtual?new Date(caixaAtual.abertura).toDateString():new Date().toDateString();
   const vd=vendas.filter(v=>new Date(v.data).toDateString()===hoje);
@@ -2594,6 +2623,7 @@ function renderRelatorios(){
         <div style="display:flex;align-items:center;gap:6px">
           <div class="val">R$ ${v.total.toFixed(2).replace('.',',')}</div>
           <button onclick="ultimaVenda=vendas.find(x=>x.id===${v.id});abrirNota()" style="background:var(--espresso);color:white;border:none;border-radius:6px;padding:3px 7px;cursor:pointer;font-size:.7rem">Imprimir</button>
+          <button onclick="removerVenda(${v.id})" style="background:var(--vermelho);color:white;border:none;border-radius:6px;padding:3px 7px;cursor:pointer;font-size:.7rem">Remover</button>
         </div>`;
       hl.appendChild(div);
     });
