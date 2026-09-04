@@ -673,9 +673,18 @@ tr:hover td{background:#fdf8f4}
   <div class="sec-header"><h2>Relatórios de Vendas</h2><p>Visao geral do desempenho</p></div>
   <div class="filtro-row">
     <button class="filtro-btn ativo" onclick="filtrarRel('hoje',this)">Hoje</button>
-    <button class="filtro-btn" onclick="filtrarRel('semana',this)">Esta Semana</button>
-    <button class="filtro-btn" onclick="filtrarRel('mes',this)">Este Mes</button>
+    <button class="filtro-btn" onclick="filtrarRel('7',this)">7 dias</button>
+    <button class="filtro-btn" onclick="filtrarRel('15',this)">15 dias</button>
+    <button class="filtro-btn" onclick="filtrarRel('30',this)">30 dias</button>
+    <button class="filtro-btn" onclick="filtrarRel('seg-sab',this)" title="Semana atual, de segunda a sábado">Seg a Sáb</button>
     <button class="filtro-btn" onclick="filtrarRel('tudo',this)">Tudo</button>
+    <button class="filtro-btn" onclick="filtrarRel('personalizado',this)">Personalizado</button>
+  </div>
+  <div id="filtro-personalizado-row" style="display:none;gap:8px;margin:-10px 0 18px;flex-wrap:wrap;align-items:center">
+    <input id="filtro-data-ini" type="date" style="padding:7px 11px;border:1.5px solid #ddd;border-radius:8px;font-size:.83rem;font-family:'DM Sans',sans-serif">
+    <span style="color:var(--cinza);font-size:.83rem">até</span>
+    <input id="filtro-data-fim" type="date" style="padding:7px 11px;border:1.5px solid #ddd;border-radius:8px;font-size:.83rem;font-family:'DM Sans',sans-serif">
+    <button onclick="aplicarFiltroPersonalizado()" style="padding:7px 14px;border:none;border-radius:8px;background:var(--espresso);color:white;cursor:pointer;font-size:.8rem;font-weight:600">Aplicar</button>
   </div>
   <div class="resumo-grid" style="margin-bottom:18px">
     <div class="resumo-card"><label>Faturamento</label><div class="valor" id="rel-fat">R$ 0,00</div></div>
@@ -692,6 +701,13 @@ tr:hover td{background:#fdf8f4}
       <div class="resumo-card vermelho"><label>Despesas</label><div class="valor" id="lucro-desp">R$ 0,00</div></div>
       <div class="resumo-card" id="lucro-card"><label>Lucro Liquido</label><div class="valor" id="lucro-val">R$ 0,00</div></div>
     </div>
+  </div>
+
+  <!-- COMPARATIVO -->
+  <div class="rel-card" id="comparativo-card" style="margin-bottom:18px">
+    <h3>Comparativo com Período Anterior</h3>
+    <p id="comparativo-label" style="font-size:.78rem;color:var(--cinza);margin-top:-8px;margin-bottom:12px"></p>
+    <div class="resumo-grid" style="margin-bottom:0" id="comparativo-grid"></div>
   </div>
 
   <div class="rel-grid">
@@ -1520,6 +1536,7 @@ let categoriasDesp = ['Aluguel','Energia','Água','Ingredientes','Funcionários'
 let metas={diaria:0, mensal:0};
 let carrinho=[], formaPgto='dinheiro', editandoProdId=null, editandoDespId=null, editandoFuncId=null;
 let filtroAtual='hoje', ultimaVenda=null, descontoAtual=0;
+let filtroDataIni=null, filtroDataFim=null;
 
 function mostrarLoading(msg='Carregando...'){
   document.getElementById('loading-overlay').style.display='flex';
@@ -2542,17 +2559,113 @@ function renderFuncionarios(){
 function filtrarRel(periodo,btn){
   filtroAtual=periodo;
   document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('ativo'));
-  btn.classList.add('ativo');renderRelatorios();
+  btn.classList.add('ativo');
+  const rowPersonalizado=document.getElementById('filtro-personalizado-row');
+  if(periodo==='personalizado'){
+    rowPersonalizado.style.display='flex';
+    if(!filtroDataIni||!filtroDataFim) return;
+  } else {
+    rowPersonalizado.style.display='none';
+  }
+  renderRelatorios();
+}
+
+function aplicarFiltroPersonalizado(){
+  const ini=document.getElementById('filtro-data-ini').value;
+  const fim=document.getElementById('filtro-data-fim').value;
+  if(!ini||!fim){alert('Selecione as duas datas.');return;}
+  if(ini>fim){alert('A data inicial deve ser anterior à data final.');return;}
+  filtroDataIni=ini;filtroDataFim=fim;filtroAtual='personalizado';
+  renderRelatorios();
+}
+
+// Intervalo [inicio,fim] do periodo selecionado. inicio=null significa "Tudo".
+function getRangeAtual(){
+  const agora=new Date();
+  let fim=new Date(agora);fim.setHours(23,59,59,999);
+  let inicio=null;
+  if(filtroAtual==='hoje'){inicio=new Date(agora);inicio.setHours(0,0,0,0);}
+  else if(filtroAtual==='7'||filtroAtual==='15'||filtroAtual==='30'){
+    inicio=new Date(agora);inicio.setDate(inicio.getDate()-(Number(filtroAtual)-1));inicio.setHours(0,0,0,0);
+  }
+  else if(filtroAtual==='seg-sab'){
+    const dia=agora.getDay(); // 0=dom,1=seg,...,6=sab
+    const diffSegunda=dia===0?6:dia-1; // dias desde a ultima segunda-feira
+    inicio=new Date(agora);inicio.setDate(inicio.getDate()-diffSegunda);inicio.setHours(0,0,0,0);
+    fim=new Date(inicio);fim.setDate(fim.getDate()+5);fim.setHours(23,59,59,999);
+  }
+  else if(filtroAtual==='personalizado'&&filtroDataIni&&filtroDataFim){
+    inicio=new Date(filtroDataIni+'T00:00:00');
+    fim=new Date(filtroDataFim+'T23:59:59');
+  }
+  return {inicio,fim};
+}
+
+// Intervalo imediatamente anterior, com a mesma duracao do periodo atual.
+function getRangeAnterior(){
+  const {inicio,fim}=getRangeAtual();
+  if(!inicio)return{inicio:null,fim:null};
+  if(filtroAtual==='seg-sab'){
+    // Semana comercial: compara sempre com a semana (seg-sab) imediatamente anterior.
+    const inicioAnt=new Date(inicio);inicioAnt.setDate(inicioAnt.getDate()-7);
+    const fimAnt=new Date(fim);fimAnt.setDate(fimAnt.getDate()-7);
+    return {inicio:inicioAnt,fim:fimAnt};
+  }
+  const duracao=fim.getTime()-inicio.getTime();
+  const fimAnt=new Date(inicio.getTime()-1);
+  const inicioAnt=new Date(fimAnt.getTime()-duracao);
+  return {inicio:inicioAnt,fim:fimAnt};
 }
 
 function vendasFiltradas(){
-  const agora=new Date();
+  const {inicio,fim}=getRangeAtual();
   return vendas.filter(v=>{
+    if(!inicio)return true;
     const d=new Date(v.data);
-    if(filtroAtual==='hoje')return d.toDateString()===agora.toDateString();
-    if(filtroAtual==='semana'){const s=new Date(agora);s.setDate(s.getDate()-7);return d>=s;}
-    if(filtroAtual==='mes')return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();
-    return true;
+    return d>=inicio&&d<=fim;
+  });
+}
+
+function statsPeriodo(inicio,fim){
+  const vs=vendas.filter(v=>{if(!inicio)return true;const d=new Date(v.data);return d>=inicio&&d<=fim;});
+  const ifs=pedidosIfood.filter(p=>p.status!=='cancelado').filter(p=>{if(!inicio)return true;const d=new Date(p.data);return d>=inicio&&d<=fim;});
+  const fatPdv=vs.reduce((s,v)=>s+Number(v.total),0);
+  const fatIfood=ifs.reduce((s,p)=>s+Number(p.total),0);
+  return {fat:fatPdv+fatIfood,pedidos:vs.length,ticket:vs.length>0?fatPdv/vs.length:0};
+}
+
+function diffPercentual(atual,anterior){
+  if(anterior===0)return atual===0?0:100;
+  return ((atual-anterior)/anterior)*100;
+}
+
+function renderComparativo(){
+  const card=document.getElementById('comparativo-card');
+  const {inicio:iAtual,fim:fAtual}=getRangeAtual();
+  if(!iAtual){card.style.display='none';return;}
+  card.style.display='block';
+  const {inicio:iAnt,fim:fAnt}=getRangeAnterior();
+  const atual=statsPeriodo(iAtual,fAtual);
+  const anterior=statsPeriodo(iAnt,fAnt);
+  document.getElementById('comparativo-label').textContent=
+    'Período anterior: '+iAnt.toLocaleDateString('pt-BR')+' — '+fAnt.toLocaleDateString('pt-BR');
+  const itens=[
+    {label:'Faturamento',atual:atual.fat,anterior:anterior.fat,money:true},
+    {label:'Pedidos',atual:atual.pedidos,anterior:anterior.pedidos,money:false},
+    {label:'Ticket Médio',atual:atual.ticket,anterior:anterior.ticket,money:true}
+  ];
+  const grid=document.getElementById('comparativo-grid');
+  grid.innerHTML='';
+  itens.forEach(it=>{
+    const pct=diffPercentual(it.atual,it.anterior);
+    const subiu=pct>=0;
+    const fmt=v=>it.money?('R$ '+v.toFixed(2).replace('.',',')):Math.round(v);
+    const div=document.createElement('div');
+    div.className='resumo-card '+(subiu?'verde':'vermelho');
+    div.innerHTML=`<label>${it.label}</label>
+      <div class="valor">${fmt(it.atual)}</div>
+      <div class="sub">${subiu?'▲':'▼'} ${Math.abs(pct).toFixed(1)}% vs. anterior (${fmt(it.anterior)})</div>`;
+    grid.appendChild(div);
   });
 }
 
@@ -2565,15 +2678,13 @@ function renderRelatorios(){
   document.getElementById('rel-tick').textContent='R$ '+(vf.length>0?(fat/vf.length).toFixed(2):'0,00').replace('.',',');
   document.getElementById('rel-itens').textContent=itens;
   // iFood no faturamento
-  const hoje2=new Date().toDateString();
+  const {inicio:rInicio,fim:rFim}=getRangeAtual();
   const ifoodFat = pedidosIfood
     .filter(p => p.status !== 'cancelado')
     .filter(p => {
+      if(!rInicio) return true;
       const d = new Date(p.data);
-      if(filtroAtual==='hoje') return d.toDateString()===new Date().toDateString();
-      if(filtroAtual==='semana'){const s=new Date();s.setDate(s.getDate()-7);return d>=s;}
-      if(filtroAtual==='mes') return d.getMonth()===new Date().getMonth()&&d.getFullYear()===new Date().getFullYear();
-      return true;
+      return d>=rInicio && d<=rFim;
     })
     .reduce((s,p) => s + Number(p.total), 0);
   if(ifoodFat > 0){
@@ -2585,13 +2696,10 @@ function renderRelatorios(){
   }
 
   // Lucro real
-  const agora=new Date();
   const despFiltradas=despesas.filter(d=>{
+    if(!rInicio) return true;
     const dt=new Date(d.data+'T00:00:00');
-    if(filtroAtual==='hoje') return dt.toDateString()===agora.toDateString();
-    if(filtroAtual==='semana'){const s=new Date(agora);s.setDate(s.getDate()-7);return dt>=s;}
-    if(filtroAtual==='mes') return dt.getMonth()===agora.getMonth()&&dt.getFullYear()===agora.getFullYear();
-    return true;
+    return dt>=rInicio && dt<=rFim;
   });
   const totalDesp=despFiltradas.reduce((s,d)=>s+Number(d.valor),0);
   const lucro=fat-totalDesp;
@@ -2635,15 +2743,18 @@ function renderRelatorios(){
   const sorted=Object.entries(rank).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const max=sorted.length>0?sorted[0][1]:1;
   const rkEl=document.getElementById('rank-produtos');
-  if(sorted.length===0){rkEl.innerHTML='<p style="color:var(--cinza);font-size:.81rem;text-align:center;padding:16px">Sem dados ainda.</p>';rkEl.innerHTML+='';return;}
-  rkEl.innerHTML='';
-  sorted.forEach(([nome,qtd])=>{
-    const pct=Math.round((qtd/max)*100);
-    const div=document.createElement('div');div.className='bar-row';
-    div.innerHTML=`<div class="bar-label"><span>${esc(nome)}</span><span><strong>${qtd}</strong> un.</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>`;
-    rkEl.appendChild(div);
-  });
+  if(sorted.length===0){
+    rkEl.innerHTML='<p style="color:var(--cinza);font-size:.81rem;text-align:center;padding:16px">Sem dados ainda.</p>';
+  } else {
+    rkEl.innerHTML='';
+    sorted.forEach(([nome,qtd])=>{
+      const pct=Math.round((qtd/max)*100);
+      const div=document.createElement('div');div.className='bar-row';
+      div.innerHTML=`<div class="bar-label"><span>${esc(nome)}</span><span><strong>${qtd}</strong> un.</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>`;
+      rkEl.appendChild(div);
+    });
+  }
 
   // Pizza pagamento
   const pgtoEl=document.getElementById('pgto-pizza');
@@ -2660,6 +2771,8 @@ function renderRelatorios(){
       <div class="pf-bar" style="background:${item.cor}"></div>`;
     pgtoEl.appendChild(div);
   });
+
+  renderComparativo();
 }
 
 // ═══════════════════════════════════════════════════
