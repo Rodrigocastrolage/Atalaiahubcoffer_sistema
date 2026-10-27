@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardápio — Atalaia Hub Coffee</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--espresso:#0a3d2e;--cafe:#0d4f3c;--caramelo:#e8c07d;--creme:#f5f0e8;--cinza:#5a6b5e;--vermelho:#b84040;--sombra:0 4px 24px rgba(10,61,46,0.15);--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--espresso);min-height:100vh;padding-bottom:90px}
+header{background:var(--espresso);color:var(--creme);padding:18px 16px;position:sticky;top:0;z-index:10}
+header h1{font-family:'Playfair Display',serif;font-size:1.3rem}
+header p{font-size:.82rem;color:var(--caramelo);margin-top:2px}
+.cats{display:flex;gap:7px;overflow-x:auto;padding:12px 16px;position:sticky;top:64px;background:var(--creme);z-index:9;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:none;padding:7px 16px;border-radius:20px;border:1.5px solid #ddd;background:white;font:600 .8rem 'DM Sans',sans-serif;color:var(--cinza);cursor:pointer}
+.cat.ativo{background:var(--espresso);color:white;border-color:var(--espresso)}
+main{padding:4px 16px 16px;max-width:640px;margin:0 auto}
+h2{font-family:'Playfair Display',serif;font-size:1.1rem;margin:16px 0 8px}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:white;border-radius:var(--radius);padding:13px 14px;margin-bottom:9px;box-shadow:var(--sombra)}
+.item .nome{font-weight:600;font-size:.95rem}
+.item .preco{color:var(--cinza);font-size:.85rem;margin-top:2px}
+.qtd{display:flex;align-items:center;gap:10px;flex:none}
+.qtd button{width:34px;height:34px;border-radius:50%;border:none;background:var(--caramelo);color:var(--espresso);font-size:1.2rem;font-weight:700;cursor:pointer}
+.qtd button.menos{background:#eee}
+.qtd span{min-width:18px;text-align:center;font-weight:700}
+.barra{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;background:white;box-shadow:0 -4px 20px rgba(0,0,0,.1);display:none;z-index:20}
+.barra.visivel{display:block}
+.btn{width:100%;background:var(--espresso);color:white;border:none;border-radius:12px;padding:14px;font:700 1rem 'DM Sans',sans-serif;cursor:pointer;display:flex;justify-content:space-between}
+.btn:disabled{opacity:.6}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,30,20,.55);z-index:30;align-items:flex-end;justify-content:center}
+.modal-bg.aberto{display:flex}
+.modal{background:white;border-radius:20px 20px 0 0;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:22px 18px}
+.modal h3{font-family:'Playfair Display',serif;margin-bottom:12px}
+.linha{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #eee;font-size:.92rem}
+.total{display:flex;justify-content:space-between;font-weight:700;font-size:1.05rem;padding:12px 0}
+.modal input,.modal textarea{width:100%;padding:11px 13px;border:1.5px solid #ddd;border-radius:10px;font:.93rem 'DM Sans',sans-serif;margin-top:8px;background:#fdfaf7}
+.modal textarea{resize:none;height:70px}
+.sec{background:#eee;color:var(--espresso);margin-top:8px;justify-content:center}
+.aviso{text-align:center;padding:60px 24px;color:var(--cinza)}
+.aviso h2{margin-top:0}
+.ok{text-align:center;padding:50px 24px}
+.ok .check{font-size:3rem}
+.ok p{color:var(--cinza);margin:8px 0 22px}
+.erro{color:var(--vermelho);font-size:.85rem;margin-top:8px;display:none}
+.pagar{font-size:.78rem;color:var(--cinza);text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Atalaia Hub Coffee</h1>
+  <p id="mesa-label">Carregando…</p>
+</header>
+
+<div id="conteudo">
+  <div class="cats" id="cats"></div>
+  <main id="lista"></main>
+</div>
+
+<div class="barra" id="barra">
+  <button class="btn" onclick="abrirResumo()"><span id="barra-qtd"></span><span>Ver pedido · <span id="barra-total"></span></span></button>
+</div>
+
+<div class="modal-bg" id="modal" onclick="if(event.target===this)fecharResumo()">
+  <div class="modal">
+    <h3>Seu pedido</h3>
+    <div id="resumo"></div>
+    <div class="total"><span>Total</span><span id="resumo-total"></span></div>
+    <input id="cliente" placeholder="Seu nome (opcional)" maxlength="40">
+    <textarea id="obs" placeholder="Observações (ex: sem açúcar)" maxlength="200"></textarea>
+    <div class="erro" id="erro"></div>
+    <button class="btn" id="btn-enviar" style="justify-content:center;margin-top:14px" onclick="enviar()">Enviar pedido</button>
+    <button class="btn sec" onclick="fecharResumo()">Voltar ao cardápio</button>
+    <div class="pagar">O pagamento é feito no caixa ao final.</div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://eesxonzhyiskrchxlnkf.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlc3hvbnpoeWlza3JjaHhsbmtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MzIwNjYsImV4cCI6MjA5MTUwODA2Nn0.gJutNcFvE36eT1OHpAEUuk0z0OOspI-3eSRTWPdr9Uk';
+const HEADERS = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY, 'Content-Type': 'application/json' };
+
+const mesa = parseInt(new URLSearchParams(location.search).get('mesa'), 10);
+let produtos = [], categoria = null;
+const carrinho = {}; // id -> qtd
+
+const $ = id => document.getElementById(id);
+const brl = n => 'R$ ' + Number(n).toFixed(2).replace('.', ',');
+
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(text != null) e.textContent = text;
+  return e;
+}
+
+async function init(){
+  if(!(mesa > 0)){
+    $('mesa-label').textContent = '';
+    $('conteudo').innerHTML = '<div class="aviso"><h2>Mesa não identificada</h2><p>Escaneie o QR Code da sua mesa para fazer o pedido.</p></div>';
+    return;
+  }
+  $('mesa-label').textContent = 'Mesa ' + mesa;
+  try {
+    const r = await fetch(SUPA_URL + '/rest/v1/produtos?select=id,nome,cat,preco,estoque&order=nome&limit=1000', { headers: HEADERS });
+    if(!r.ok) throw new Error(r.status);
+    const raw = await r.json();
+    // mesma regra do sistema: mantém o registro mais novo por nome
+    const mapa = {};
+    raw.forEach(p => { const k = p.nome.trim().toLowerCase(); if(!mapa[k] || p.id > mapa[k].id) mapa[k] = p; });
+    produtos = Object.values(mapa).filter(p => p.estoque > 0 && p.preco > 0);
+  } catch(e){
+    $('conteudo').innerHTML = '<div class="aviso"><h2>Não foi possível carregar o cardápio</h2><p>Chame um atendente ou tente novamente.</p></div>';
+    return;
+  }
+  const cats = [...new Set(produtos.map(p => p.cat || 'Outros'))];
+  categoria = cats[0] || null;
+  renderCats(cats);
+  renderLista();
+}
+
+function renderCats(cats){
+  const box = $('cats');
+  box.innerHTML = '';
+  cats.forEach(c => {
+    const b = el('button', 'cat' + (c === categoria ? ' ativo' : ''), c);
+    b.onclick = () => { categoria = c; renderCats(cats); renderLista(); window.scrollTo(0, 0); };
+    box.appendChild(b);
+  });
+}
+
+function renderLista(){
+  const box = $('lista');
+  box.innerHTML = '';
+  box.appendChild(el('h2', null, categoria || ''));
+  produtos.filter(p => (p.cat || 'Outros') === categoria).forEach(p => {
+    const row = el('div', 'item');
+    const info = el('div');
+    info.appendChild(el('div', 'nome', p.nome));
+    info.appendChild(el('div', 'preco', brl(p.preco)));
+    const q = el('div', 'qtd');
+    const menos = el('button', 'menos', '−'); menos.onclick = () => mudar(p.id, -1);
+    const mais = el('button', null, '+'); mais.onclick = () => mudar(p.id, 1);
+    q.append(menos, el('span', null, carrinho[p.id] || 0), mais);
+    row.append(info, q);
+    box.appendChild(row);
+  });
+  atualizarBarra();
+}
+
+function mudar(id, d){
+  const p = produtos.find(x => x.id === id);
+  const n = Math.max(0, Math.min(p.estoque, 20, (carrinho[id] || 0) + d));
+  if(n) carrinho[id] = n; else delete carrinho[id];
+  renderLista();
+}
+
+function itensCarrinho(){
+  return Object.keys(carrinho).map(id => {
+    const p = produtos.find(x => x.id === Number(id));
+    return { id: p.id, nome: p.nome, qtd: carrinho[id], preco: p.preco };
+  });
+}
+const totalCarrinho = () => itensCarrinho().reduce((s, i) => s + i.preco * i.qtd, 0);
+
+function atualizarBarra(){
+  const itens = itensCarrinho();
+  const n = itens.reduce((s, i) => s + i.qtd, 0);
+  $('barra').classList.toggle('visivel', n > 0);
+  $('barra-qtd').textContent = n + (n === 1 ? ' item' : ' itens');
+  $('barra-total').textContent = brl(totalCarrinho());
+}
+
+function abrirResumo(){
+  const box = $('resumo');
+  box.innerHTML = '';
+  itensCarrinho().forEach(i => {
+    const l = el('div', 'linha');
+    l.append(el('span', null, i.qtd + '× ' + i.nome), el('span', null, brl(i.preco * i.qtd)));
+    box.appendChild(l);
+  });
+  $('resumo-total').textContent = brl(totalCarrinho());
+  $('erro').style.display = 'none';
+  $('modal').classList.add('aberto');
+}
+function fecharResumo(){ $('modal').classList.remove('aberto'); }
+
+async function enviar(){
+  const itens = itensCarrinho();
+  if(!itens.length) return;
+  const btn = $('btn-enviar');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  try {
+    const r = await fetch(SUPA_URL + '/rest/v1/pedidos_mesa', {
+      method: 'POST',
+      headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        mesa, itens, total: totalCarrinho(), status: 'novo',
+        cliente: $('cliente').value.trim() || null,
+        obs: $('obs').value.trim() || null
+      })
+    });
+    if(!r.ok) throw new Error(r.status);
+  } catch(e){
+    btn.disabled = false; btn.textContent = 'Enviar pedido';
+    $('erro').textContent = 'Não foi possível enviar. Tente novamente ou chame um atendente.';
+    $('erro').style.display = 'block';
+    return;
+  }
+  fecharResumo();
+  $('barra').classList.remove('visivel');
+  $('conteudo').innerHTML = '<div class="ok"><div class="check">✅</div><h2>Pedido enviado!</h2><p>Mesa ' + mesa + ' — já avisamos a equipe. O pagamento é feito no caixa.</p><button class="btn" style="justify-content:center" onclick="location.reload()">Fazer outro pedido</button></div>';
+}
+
+init();
+</script>
+</body>
+</html>
