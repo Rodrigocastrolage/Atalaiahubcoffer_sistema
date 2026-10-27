@@ -12,7 +12,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--espres
 header{background:var(--espresso);color:var(--creme);padding:18px 16px;position:sticky;top:0;z-index:10}
 header h1{font-family:'Playfair Display',serif;font-size:1.3rem}
 header p{font-size:.82rem;color:var(--caramelo);margin-top:2px}
-.cats{display:flex;gap:7px;overflow-x:auto;padding:12px 16px;position:sticky;top:64px;background:var(--creme);z-index:9;scrollbar-width:none}
+.cats{display:flex;gap:7px;overflow-x:auto;padding:12px 16px;position:sticky;top:var(--hh,64px);background:var(--creme);z-index:9;scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
 .cat{flex:none;padding:7px 16px;border-radius:20px;border:1.5px solid #ddd;background:white;font:600 .8rem 'DM Sans',sans-serif;color:var(--cinza);cursor:pointer}
 .cat.ativo{background:var(--espresso);color:white;border-color:var(--espresso)}
@@ -45,6 +45,31 @@ h2{font-family:'Playfair Display',serif;font-size:1.1rem;margin:16px 0 8px}
 .ok p{color:var(--cinza);margin:8px 0 22px}
 .erro{color:var(--vermelho);font-size:.85rem;margin-top:8px;display:none}
 .pagar{font-size:.78rem;color:var(--cinza);text-align:center;margin-top:10px}
+.tabs{display:flex;gap:8px;margin-top:12px}
+.tab{flex:1;background:rgba(255,255,255,.12);color:var(--creme);border:none;border-radius:10px;padding:9px;font:600 .85rem 'DM Sans',sans-serif;cursor:pointer}
+.tab.ativo{background:var(--caramelo);color:var(--espresso)}
+.tab .n{display:inline-block;background:var(--vermelho);color:white;border-radius:10px;font-size:.7rem;padding:0 6px;margin-left:5px}
+.tab .n:empty{display:none}
+.pedido{background:white;border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--sombra)}
+.pedido.meu{border:2px solid var(--caramelo)}
+.pedido.cancelado{opacity:.6}
+.pedido .topo{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:.9rem;margin-bottom:6px}
+.pedido .topo small{font-weight:400;color:var(--cinza)}
+.pedido .it{font-size:.88rem;padding:2px 0}
+.pedido .ob{font-size:.82rem;color:var(--vermelho);font-style:italic;margin-top:4px}
+.passos{display:flex;align-items:center;margin:14px 4px 4px}
+.passo{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.68rem;color:#aaa;font-weight:600;flex:none;width:64px;text-align:center}
+.passo i{width:22px;height:22px;border-radius:50%;background:#e4e4e4;display:block}
+.passo.feito{color:var(--espresso)}
+.passo.feito i{background:var(--espresso)}
+.passo.atual i{animation:pulsa 1.3s infinite}
+.liga{flex:1;height:3px;background:#e4e4e4;margin-bottom:18px}
+.liga.feito{background:var(--espresso)}
+@keyframes pulsa{50%{box-shadow:0 0 0 6px rgba(10,61,46,.2)}}
+.cancel-tag{color:var(--vermelho);font-weight:700;font-size:.85rem;margin-top:8px}
+.tot-mesa{display:flex;justify-content:space-between;font-weight:700;padding:6px 4px 14px}
+.vazio{text-align:center;color:var(--cinza);padding:40px 20px}
+.aviso-topo{position:fixed;top:12px;left:12px;right:12px;max-width:616px;margin:0 auto;background:var(--espresso);color:white;border-radius:12px;padding:14px 16px;font-weight:600;font-size:.92rem;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.35);display:none;cursor:pointer}
 </style>
 </head>
 <body>
@@ -52,12 +77,18 @@ h2{font-family:'Playfair Display',serif;font-size:1.1rem;margin:16px 0 8px}
 <header>
   <h1>Atalaia Hub Coffee</h1>
   <p id="mesa-label">Carregando…</p>
+  <div class="tabs" id="tabs" style="display:none">
+    <button class="tab ativo" id="tab-cardapio" onclick="aba('cardapio')">Cardápio</button>
+    <button class="tab" id="tab-pedidos" onclick="aba('pedidos')">Pedidos da mesa<span class="n" id="tab-n"></span></button>
+  </div>
 </header>
+<div class="aviso-topo" id="aviso-topo" onclick="aba('pedidos');this.style.display='none'"></div>
 
 <div id="conteudo">
   <div class="cats" id="cats"></div>
   <main id="lista"></main>
 </div>
+<main id="acomp" style="display:none"></main>
 
 <div class="barra" id="barra">
   <button class="btn" onclick="abrirResumo()"><span id="barra-qtd"></span><span>Ver pedido · <span id="barra-total"></span></span></button>
@@ -73,7 +104,7 @@ h2{font-family:'Playfair Display',serif;font-size:1.1rem;margin:16px 0 8px}
     <div class="erro" id="erro"></div>
     <button class="btn" id="btn-enviar" style="justify-content:center;margin-top:14px" onclick="enviar()">Enviar pedido</button>
     <button class="btn sec" onclick="fecharResumo()">Voltar ao cardápio</button>
-    <div class="pagar">O pagamento é feito no caixa ao final.</div>
+    <div class="pagar">Outras pessoas da mesa também podem pedir pelo mesmo QR Code. O pagamento é feito no caixa ao final.</div>
   </div>
 </div>
 
@@ -103,6 +134,14 @@ async function init(){
     return;
   }
   $('mesa-label').textContent = 'Mesa ' + mesa;
+  $('tabs').style.display = 'flex';
+  ajustarAltura();
+  window.addEventListener('resize', ajustarAltura);
+  document.addEventListener('click', liberarSom);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) carregarPedidos(); });
+  try { $('cliente').value = localStorage.getItem('atalaia_nome') || ''; } catch(e){}
+  carregarPedidos();
+  setInterval(() => { if(!document.hidden) carregarPedidos(); }, 5000);
   try {
     const r = await fetch(SUPA_URL + '/rest/v1/produtos?select=id,nome,cat,preco,estoque&order=nome&limit=1000', { headers: HEADERS });
     if(!r.ok) throw new Error(r.status);
@@ -195,7 +234,7 @@ async function enviar(){
   try {
     const r = await fetch(SUPA_URL + '/rest/v1/pedidos_mesa', {
       method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+      headers: { ...HEADERS, 'Prefer': 'return=representation' },
       body: JSON.stringify({
         mesa, itens, total: totalCarrinho(), status: 'novo',
         cliente: $('cliente').value.trim() || null,
@@ -203,15 +242,142 @@ async function enviar(){
       })
     });
     if(!r.ok) throw new Error(r.status);
+    const criado = await r.json();
+    guardarMeuPedido(Array.isArray(criado) ? criado[0] : criado);
   } catch(e){
     btn.disabled = false; btn.textContent = 'Enviar pedido';
     $('erro').textContent = 'Não foi possível enviar. Tente novamente ou chame um atendente.';
     $('erro').style.display = 'block';
     return;
   }
+  try { localStorage.setItem('atalaia_nome', $('cliente').value.trim()); } catch(e){}
+  btn.disabled = false; btn.textContent = 'Enviar pedido';
+  $('obs').value = '';
+  Object.keys(carrinho).forEach(k => delete carrinho[k]);
   fecharResumo();
-  $('barra').classList.remove('visivel');
-  $('conteudo').innerHTML = '<div class="ok"><div class="check">✅</div><h2>Pedido enviado!</h2><p>Mesa ' + mesa + ' — já avisamos a equipe. O pagamento é feito no caixa.</p><button class="btn" style="justify-content:center" onclick="location.reload()">Fazer outro pedido</button></div>';
+  renderLista();
+  await carregarPedidos();
+  aba('pedidos');
+  avisar('✅ Pedido enviado! Acompanhe por aqui.');
+}
+
+// ───── Acompanhamento ─────
+let aba_atual = 'cardapio', pedidosMesa = [], statusAnterior = null, audioCtx = null, avisoTimer = null;
+const ORDEM = ['novo', 'preparando', 'entregue'];
+const NOMES = ['Recebido', 'Em produção', 'Entregue'];
+
+function ajustarAltura(){ document.documentElement.style.setProperty('--hh', document.querySelector('header').offsetHeight + 'px'); }
+
+function aba(qual){
+  aba_atual = qual;
+  const ped = qual === 'pedidos';
+  $('conteudo').style.display = ped ? 'none' : '';
+  $('acomp').style.display = ped ? '' : 'none';
+  $('tab-cardapio').classList.toggle('ativo', !ped);
+  $('tab-pedidos').classList.toggle('ativo', ped);
+  if(ped){ $('barra').classList.remove('visivel'); renderPedidos(); } else { atualizarBarra(); }
+  window.scrollTo(0, 0);
+}
+
+function meusIds(){ try { return JSON.parse(localStorage.getItem('atalaia_pedidos') || '[]'); } catch(e){ return []; } }
+function guardarMeuPedido(p){
+  if(!p || !p.id) return;
+  try { localStorage.setItem('atalaia_pedidos', JSON.stringify([...meusIds(), p.id].slice(-50))); } catch(e){}
+}
+
+function liberarSom(){
+  try {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e){}
+}
+function bip(){
+  if(!audioCtx) return;
+  [0, .18].forEach((t, i) => {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = i ? 1000 : 760; g.gain.value = .12;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + .14);
+  });
+}
+function avisar(msg, forte){
+  const a = $('aviso-topo');
+  a.textContent = msg; a.style.display = 'block';
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(() => { a.style.display = 'none'; }, 8000);
+  if(forte){ bip(); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch(e){} }
+}
+
+async function carregarPedidos(){
+  try {
+    // só pedidos desta mesa, das últimas 12h, ainda não pagos
+    const desde = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
+    const url = SUPA_URL + '/rest/v1/pedidos_mesa?mesa=eq.' + mesa + '&status=in.(novo,preparando,entregue,cancelado)&criado_em=gte.' + encodeURIComponent(desde) + '&order=id';
+    const r = await fetch(url, { headers: HEADERS });
+    if(!r.ok) return;
+    pedidosMesa = await r.json();
+  } catch(e){ return; }
+  notificarMudancas();
+  const abertos = pedidosMesa.filter(p => p.status !== 'cancelado').length;
+  $('tab-n').textContent = abertos || '';
+  if(aba_atual === 'pedidos') renderPedidos();
+}
+
+function notificarMudancas(){
+  const meus = meusIds();
+  const atual = {};
+  pedidosMesa.forEach(p => { atual[p.id] = p.status; });
+  if(statusAnterior){
+    pedidosMesa.forEach(p => {
+      if(!meus.includes(p.id) || statusAnterior[p.id] === p.status) return;
+      if(p.status === 'preparando') avisar('👨‍🍳 Seu pedido #' + p.id + ' entrou em produção!', true);
+      else if(p.status === 'entregue') avisar('✅ Seu pedido #' + p.id + ' foi entregue. Bom apetite!', true);
+      else if(p.status === 'cancelado') avisar('⚠️ Seu pedido #' + p.id + ' foi cancelado. Fale com um atendente.', true);
+    });
+  }
+  statusAnterior = atual;
+}
+
+function renderPedidos(){
+  const box = $('acomp');
+  box.innerHTML = '';
+  const meus = meusIds();
+  // cancelados só aparecem para quem fez o pedido
+  const lista = pedidosMesa.filter(p => p.status !== 'cancelado' || meus.includes(p.id));
+  if(!lista.length){
+    box.appendChild(el('div', 'vazio', 'Nenhum pedido nesta mesa ainda. Escolha algo no cardápio!'));
+    return;
+  }
+  const total = pedidosMesa.filter(p => p.status !== 'cancelado').reduce((s, p) => s + Number(p.total || 0), 0);
+  const tm = el('div', 'tot-mesa');
+  tm.append(el('span', null, 'Total da mesa ' + mesa), el('span', null, brl(total)));
+  box.appendChild(tm);
+
+  lista.slice().reverse().forEach(p => {
+    const meu = meus.includes(p.id);
+    const card = el('div', 'pedido' + (meu ? ' meu' : '') + (p.status === 'cancelado' ? ' cancelado' : ''));
+    const hora = new Date(p.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const topo = el('div', 'topo');
+    const quem = (p.cliente ? p.cliente : 'Pedido #' + p.id) + (meu ? ' (você)' : '');
+    topo.append(el('span', null, quem), el('small', null, hora + ' · ' + brl(p.total)));
+    card.appendChild(topo);
+    (p.itens || []).forEach(i => card.appendChild(el('div', 'it', i.qtd + '× ' + i.nome)));
+    if(p.obs) card.appendChild(el('div', 'ob', 'Obs: ' + p.obs));
+    if(p.status === 'cancelado'){
+      card.appendChild(el('div', 'cancel-tag', 'Pedido cancelado'));
+    } else {
+      const idx = ORDEM.indexOf(p.status);
+      const passos = el('div', 'passos');
+      NOMES.forEach((nome, n) => {
+        const ps = el('div', 'passo' + (n <= idx ? ' feito' : '') + (n === idx && idx < 2 ? ' atual' : ''));
+        ps.append(el('i'), el('span', null, nome));
+        passos.appendChild(ps);
+        if(n < 2) passos.appendChild(el('div', 'liga' + (n < idx ? ' feito' : '')));
+      });
+      card.appendChild(passos);
+    }
+    box.appendChild(card);
+  });
 }
 
 init();

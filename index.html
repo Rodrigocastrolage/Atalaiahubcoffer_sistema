@@ -4002,7 +4002,7 @@ let pedidosMesa = [], mesaFechando = null, mesaAberta = null, qtdMesas = 10, url
 let pmCarregando = false, pmPrimeiraCarga = true, pmAvisouErro = false, audioCtx = null, bannerTimer = null;
 const pmVistos = new Set();
 const PM_ABERTOS = 'status=in.(novo,preparando,entregue)';
-const PM_STATUS = { novo:'Novo', preparando:'Em preparo', entregue:'Entregue' };
+const PM_STATUS = { novo:'Novo', preparando:'Em produção', entregue:'Entregue' };
 
 // O navegador só libera som depois de um clique do usuário (o login já conta).
 document.addEventListener('click', () => {
@@ -4133,7 +4133,7 @@ function renderModalMesa(){
     const hora = new Date(p.criado_em).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
     const itens = (p.itens || []).map(i => `<div>${esc(i.qtd)}× ${esc(i.nome)}</div>`).join('');
     const acoes = [];
-    if(p.status === 'novo') acoes.push(`<button onclick="mudarStatusPedido(${p.id},'preparando')">Em preparo</button>`);
+    if(p.status === 'novo') acoes.push(`<button onclick="mudarStatusPedido(${p.id},'preparando')">Em produção</button>`);
     if(p.status !== 'entregue') acoes.push(`<button onclick="mudarStatusPedido(${p.id},'entregue')">Entregue</button>`);
     acoes.push(`<button class="cancelar" onclick="cancelarPedidoMesa(${p.id})">Cancelar</button>`);
     h += `<div class="pm-pedido ${p.status === 'novo' ? 'novo' : ''}">
